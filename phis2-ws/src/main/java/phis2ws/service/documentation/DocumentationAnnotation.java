@@ -1,12 +1,12 @@
 //**********************************************************************************************
 //                                       DocumentationAnnotation.java 
 //
-// Author(s): Arnaud CHARLEROY, Morgane VIDAL
+// Author(s): Arnaud CHARLEROY, Morgane VIDAL, Eloan LAGIER
 // PHIS-SILEX version 1.0
 // Copyright © - INRA - 2016
 // Creation date: august 2016
-// Contact: arnaud.charleroy@inra.fr, anne.tireau@inra.fr, pascal.neveu@inra.fr
-// Last modification date:  February, 2017
+// Contact: eloan.lagier@inra.fr, arnaud.charleroy@inra.fr, anne.tireau@inra.fr, pascal.neveu@inra.fr
+// Last modification date:  December, 8 2017
 // Subject: A class which group documentation informations ( try message bundle for the next version)
 //***********************************************************************************************
 package phis2ws.service.documentation;
@@ -92,6 +92,9 @@ public final class DocumentationAnnotation {
     
     public static final String RAW_DATA_POST_DATA_DEFINITION = "JSON format of raw data";
     
+    public static final String CONCEPT_URI_DEFINITION ="A concept URI (Unique Resource Identifier)";
+    public static final String DEEP ="true or false deppending if you want instances of concept progenity";
+    
     // Exemples de variables
     public static final String EXAMPLE_EXPERIMENT_URI = "http://phenome-fppn.fr/diaphen/DIA2012-1";
     public static final String EXAMPLE_EXPERIMENT_START_DATE = "2015-07-07 00:00:00+02";
@@ -157,4 +160,7 @@ public final class DocumentationAnnotation {
     
     public static final String EXAMPLE_VARIABLE_URI = "http://www.phenome-fppn.fr/diaphen/id/variable/v0000001";
     public static final String EXAMPLE_VARIABLE_LABEL = "LAI";
+    
+    public static final String EXAMPLE_CONCEPT_URI = "http://www.phenome-fppn.fr/vocabulary/2017#Document";
+    public static final String EXAMPLE_DEEP ="true";
 }
