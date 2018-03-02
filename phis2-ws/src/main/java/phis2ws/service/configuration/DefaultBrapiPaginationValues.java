@@ -1,7 +1,7 @@
 //**********************************************************************************************
 //                                       DefaultBrapiPaginationValues.java 
 //
-// Author(s): Arnaud CHARLEROY
+// Author(s): Arnaud Charleroy
 // PHIS-SILEX version 1.0
 // Copyright © - INRA - 2016
 // Creation date: august 2016
@@ -14,7 +14,7 @@ package phis2ws.service.configuration;
 /**
  * Défini les valeurs par défaut du WebService selon la Plant Breeding API
  * 06/16
- * @author Arnaud CHARLEROY
+ * @author Arnaud Charleroy
  * @see http://docs.brapi.apiary.io/#
  */
 public final class DefaultBrapiPaginationValues {

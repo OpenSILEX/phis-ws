@@ -1,7 +1,7 @@
 //**********************************************************************************************
 //                                       ResourcesUtils.java 
 //
-// Author(s): Arnaud CHARLEROY, Morgane Vidal
+// Author(s): Arnaud Charleroy, Morgane Vidal
 // PHIS-SILEX version 1.0
 // Copyright © - INRA - 2016
 // Creation date: may 2016
@@ -22,7 +22,7 @@ import org.joda.time.format.DateTimeFormat;
 /**
  * List of functions which can be used in ressources
  * @author Morgane Vidal
- * @author Arnaud CHARLEROY
+ * @author Arnaud Charleroy
  */
 public class ResourcesUtils {
     

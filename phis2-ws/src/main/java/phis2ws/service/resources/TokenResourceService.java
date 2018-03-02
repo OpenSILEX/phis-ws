@@ -1,7 +1,7 @@
 //**********************************************************************************************
 //                                       TokenResourceService.java 
 //
-// Author(newSession): Arnaud CHARLEROY
+// Author(s): Samuel Cherimont, Arnaud Charleroy
 // PHIS-SILEX version 1.0
 // Copyright © - INRA - 2015
 // Creation date: november 2015
@@ -69,7 +69,7 @@ import phis2ws.service.view.brapi.form.ResponseUnique;
  * TokenResourceService - Classe correspondant au chemin brapi/v1/token ou token
  * du Web Service
  *
- * @version1.0
+ * @version 1.0
  *
  * @author Samuël Chérimont
  * @date 26/11/2015
@@ -91,13 +91,14 @@ public class TokenResourceService {
     static final List<String> GRANTTYPE_AUTHORIZED = Collections.unmodifiableList(Arrays.asList("jwt", "password"));
 
     static {
-        Map<String, String> tmpMap = new HashMap<>();
+        Map<String, String> temporaryMap = new HashMap<>();
         // can put multiple issuers
-        tmpMap.put("GnpIS", "gnpisPublicKeyFileName");
-        ISSUERS_PUBLICKEY = Collections.unmodifiableMap(tmpMap);
+        temporaryMap.put("GnpIS", "gnpisPublicKeyFileName");
+        temporaryMap.put("Phis", "phisPublicKeyFileName");
+        ISSUERS_PUBLICKEY = Collections.unmodifiableMap(temporaryMap);
     }
     //SILEX:conception
-    // Pour garder l'information du claimset durant le login
+    // To keep claimset information during the loggin
     private JWTClaimsSet jwtClaimsSet = null;
    //\SILEX:conception
     /**
@@ -137,13 +138,13 @@ public class TokenResourceService {
         @ApiResponse(code = 200, message = "Access token already exist and send again to user")})
     public Response getToken(@ApiParam(value = "JSON object needed to login", required = true) TokenDTO jsonToken, @Context UriInfo ui) {
         ArrayList<Status> statusList = new ArrayList<>();
-//        Verification du grant type
+//        Verification of grant type
         String grantType = jsonToken.getGrant_type();
         if (grantType == null || grantType.isEmpty() || !GRANTTYPE_AUTHORIZED.contains(grantType)) {
             statusList.add(new Status("Wrong grant type", StatusCodeMsg.ERR, "Authorized grant type : " + GRANTTYPE_AUTHORIZED.toString()));
             return Response.status(Response.Status.BAD_REQUEST).entity(new ResponseFormPOST(statusList)).build();
         }
-        // Initialisation des variables
+        // Initialize variables
         Boolean isJWT = false;
         String username = jsonToken.getUsername();
         String password = null;
@@ -157,39 +158,42 @@ public class TokenResourceService {
             // cas unsername /password
             password = jsonToken.getPassword();
         }
-
-//        LOGGER.debug(Boolean.toString(isJWT));
-//        LOGGER.debug(Boolean.toString(validJWTToken));
+        //SILEX:test
+        // LOGGER.debug(Boolean.toString(isJWT));
+        // LOGGER.debug(Boolean.toString(validJWTToken));
+        //\SILEX:test
         if ((password != null && username != null) || (isJWT && validJWTToken && username != null)) {
-            //droit de connexion ?
+            // Is user authorized ?
             User user = new User(username, password);
             try {
                 //SILEX:info
-                //Si on a un jwt on ne verifie pas le password car la signature verifie deja l'authenticite
+                // if we have a jwt the password is not verified because it means that the
+                // user is already logged
+                //\SILEX:info
                 if (isJWT && validJWTToken) {
                     user = checkAuthentification(user, false);
                 } else {
                     user = checkAuthentification(user, true);
                 }
-                //\SILEX:info
                 
-                // Cas pas d'utilisateur existant
+                // No user found
                 if (user == null) {
                     statusList.add(new Status("User/password doesn't exist", StatusCodeMsg.ERR, null));
                 } else {
-                    // Cas utilisateur existant on lui cree une session et un jeton
-                    //token existant ?
+                    // User found, create a session
+                    // token exist ?
                     String userSessionId = TokenManager.Instance().searchSession(username);
                     Response.Status reponseStatus = Response.Status.OK;
                     String expires_in = null;
                     if (userSessionId == null) {
-                        //creation d'un Token et ajout d'un objet Session a la session en cours
+                        //create a session and add information to this one 
                         userSessionId = this.createId(username);
                         Session newSession = new Session(userSessionId, username, user);
                         newSession.setJwtClaimsSet(this.jwtClaimsSet);
                         TokenManager.Instance().createToken(newSession);
                         reponseStatus = Response.Status.CREATED;
                     } else {
+                        // retreive existing session
                         Session session = TokenManager.Instance().getSession(userSessionId);
                         DateTime sessionStartDateTime = ResourcesUtils.convertStringToDateTime(session.getDateStart(), "yyyy-MM-dd HH:mm:ss");
                         if (sessionStartDateTime != null) {
@@ -197,18 +201,19 @@ public class TokenResourceService {
                             expires_in = Integer.toString(Integer.valueOf(PropertiesFileManager.getConfigFileProperty("service", "sessionTime")) - secondsBetween.getSeconds());
                         }
                     }
-                    //envoi résultat
+                    // return result
                     TokenResponseStructure res = new TokenResponseStructure(userSessionId, user.getFirstName() + " " + user.getFamilyName(), expires_in);
                     final URI uri = new URI(ui.getPath());
                     return Response.status(reponseStatus).location(uri).entity(res).build();
                 }
-
+                
             } catch (NoSuchAlgorithmException | SQLException | URISyntaxException ex) {
                 LOGGER.error(ex.getMessage(), ex);
                 statusList.add(new Status("SQL " + StatusCodeMsg.ERR, StatusCodeMsg.ERR, ex.getMessage()));
                 return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(new ResponseFormPOST(statusList)).build();
             }
         } else {
+            // if an error has occurred
             if (!isJWT && password == null) {
                 statusList.add(new Status("Empty password", StatusCodeMsg.ERR, null));
             }
@@ -285,34 +290,39 @@ public class TokenResourceService {
 //        }
         return id;
     }
-
-    private User checkAuthentification(User u, boolean verifPassword) {
+    /**
+     * 
+     * @param user user instance to check
+     * @param verifPassword if we need to verify the password
+     * @return User|null an instance of user or null
+     */
+    private User checkAuthentification(User user, boolean verifPassword) {
         UserDaoPhisBrapi uspb = new UserDaoPhisBrapi();
         // choose the database with payload information
         if (this.jwtClaimsSet != null) {
            uspb.setDataSourceFromJwtClaimsSet(this.jwtClaimsSet);
         }
         
-        final String password = u.getPassword();
+        final String password = user.getPassword();
 
         try {
-            if (uspb.existInDB(u)) {
-                u.setPassword(uspb.getPasswordFromDb(u.getEmail()));
+            if (uspb.existInDB(user)) {
+                user.setPassword(uspb.getPasswordFromDb(user.getEmail()));
             } else {
-                u = null;
+                user = null;
             }
-            if (verifPassword && u != null) {
-                if (password.equals(u.getPassword())) {
-                    uspb.admin = uspb.isAdmin(u);
+            if (verifPassword && user != null) {
+                if (password.equals(user.getPassword())) {
+                    uspb.admin = uspb.isAdmin(user);
                 } else {
-                    u = null;
+                    user = null;
                 }
             }
             //SILEX:test
             // LOGGER.debug(JsonConverter.ConvertToJson(user));
             //\SILEX:test
 
-            return u;
+            return user;
         } catch (Exception ex) {
             LOGGER.error(ex.getMessage(), ex);
         }
@@ -323,11 +333,9 @@ public class TokenResourceService {
     /**
      * Verify and validate JWT
      *
-     * @param jsonToken le json envoyé dans le body
-     * @param statusList liste des status de retour status
-     * @param issuer la provenance du jwt example : "GnpIS", "Alfis-R", ... voir
-     * variable ISSUERS_PUBLICKEY
-     * @return boolean valid JWT ou invalide
+     * @param jsonToken json body
+     * @param statusList return status list
+     * @return boolean valid JWT or invalid
      */
     private boolean validJWTToken(TokenDTO jsonToken, ArrayList<Status> statusList) {
         boolean validJWTToken = false;
@@ -338,17 +346,19 @@ public class TokenResourceService {
         try {
             signedJWT = SignedJWT.parse(clientId);
             JWTClaimsSet jwtClaimsSetParsed = signedJWT.getJWTClaimsSet();
-//                LOGGER.debug(signedJWT.getPayload().toString());
-//                LOGGER.debug(signedJWT.getHeader().toString());
+            //SILEX:test
+            // LOGGER.debug(signedJWT.getPayload().toString());
+            // LOGGER.debug(signedJWT.getHeader().toString());
+            //SILEX:test
 
             if (ISSUERS_PUBLICKEY.containsKey(jwtClaimsSetParsed.getIssuer())) {
 
                 String FilePropertyName = PropertiesFileManager.getConfigFileProperty("service", ISSUERS_PUBLICKEY.get(jwtClaimsSetParsed.getIssuer()));
-                // verifie la cle publique en fonction de la provenance
+               // verify the public key provenance  
                 RSAPublicKey publicKey = PropertiesFileManager.parseBinaryPublicKey(FilePropertyName);
 
                 JWSVerifier verifier = new RSASSAVerifier(publicKey);
-                // verifie le payload
+                // verify the payload
                 boolean validPublicKey = signedJWT.verify(verifier);
                 boolean strangeJWT = new Date().after(jwtClaimsSetParsed.getIssueTime());
                 boolean expireJWT = new Date().before(jwtClaimsSetParsed.getExpirationTime());
@@ -371,7 +381,7 @@ public class TokenResourceService {
                 }
                 if (subjectMatch && strangeJWT && validPublicKey && expireJWT) {
                     //SILEX:info
-                    //Si on a un jwt on recupere  les attr payload obligatoires
+                    //We check all important claims in the payload
                     //\SILEX:info
                     this.jwtClaimsSet = jwtClaimsSetParsed;
                 }
@@ -380,7 +390,7 @@ public class TokenResourceService {
             }
 
         } catch (ParseException | JOSEException ex) {
-            // verify le format du JWT header.payload.signature
+            // verify JWT format header.payload.signature
             LOGGER.error(ex.getMessage(), ex);
             statusList.add(new Status("JWT Error", StatusCodeMsg.ERR, ex.getMessage()));
         }

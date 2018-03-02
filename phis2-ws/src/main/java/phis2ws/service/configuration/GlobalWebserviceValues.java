@@ -1,7 +1,7 @@
 //**********************************************************************************************
 //                                       GlobalWebserviceValues.java 
 //
-// Author(s): Arnaud CHARLEROY
+// Author(s): Arnaud Charleroy
 // PHIS-SILEX version 1.0
 // Copyright © - INRA - 2016
 // Creation date: august 2016
@@ -20,7 +20,7 @@ import phis2ws.service.view.brapi.form.ResponseFormGET;
  * Définit des réponse qui seront utilisées par défaut dans le
  * WebService
  * @date 07/16
- * @author Arnaud CHARLEROY
+ * @author Arnaud Charleroy
  */
 public final class GlobalWebserviceValues {
 

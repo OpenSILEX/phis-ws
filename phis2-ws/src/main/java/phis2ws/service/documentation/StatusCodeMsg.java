@@ -1,7 +1,7 @@
 //**********************************************************************************************
 //                                       StatusCodeMsg.java 
 //
-// Author(s): Arnaud CHARLEROY 
+// Author(s): Arnaud Charleroy 
 // PHIS-SILEX version 1.0
 // Copyright © - INRA - 2016
 // Creation date: august 2016
@@ -16,7 +16,7 @@ import javax.inject.Singleton;
 
 /**
  * Defines the web service return messages
- * @author Arnaud CHARLEROY
+ * @author Arnaud Charleroy
  * @author Morgane Vidal
  */
 @Singleton

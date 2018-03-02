@@ -23,14 +23,14 @@ import phis2ws.service.view.brapi.form.ResponseFormGET;
  * Permet de filtrer les envois au Web Service grâce au header des requêtes
  * ainsi que d'autres paramètres
  *
- * @author Arnaud CHARLEROY
+ * @author Arnaud Charleroy
  * @date 05/16
  * @update 10/16 brapi v1
  */
 @Provider
 public class AuthentificationRequestFilter implements ContainerRequestFilter {
 
-    final static Logger logger = LoggerFactory.getLogger(AuthentificationRequestFilter.class);
+    final static Logger LOGGER = LoggerFactory.getLogger(AuthentificationRequestFilter.class);
 
     /**
      * Filtre le token de session
@@ -49,7 +49,7 @@ public class AuthentificationRequestFilter implements ContainerRequestFilter {
 
         final UriInfo uriInfo = requestContext.getUriInfo();
         final String resourcePath = uriInfo.getPath();
-//        logger.debug(resourcePath);
+//        LOGGER.debug(resourcePath);
         // Swagger.json and token authorized
         if (resourcePath != null && !resourcePath.contains("token") && !resourcePath.contains("swagger.json")) {
             //Get request headers
@@ -58,9 +58,9 @@ public class AuthentificationRequestFilter implements ContainerRequestFilter {
                 throw new WebApplicationException(accessDenied);
             }
             //Fetch authorization header
-//            logger.debug(headers.toString());
+//            LOGGER.debug(headers.toString());
             String authorization = requestContext.getHeaderString(GlobalWebserviceValues.AUTHORIZATION_PROPERTY);
-//            logger.debug(authorization.toString());
+//            LOGGER.debug(authorization.toString());
             //If no authorization information present; block access
             if (authorization == null || authorization.isEmpty()) {
                 throw new WebApplicationException(accessDenied);
@@ -75,9 +75,9 @@ public class AuthentificationRequestFilter implements ContainerRequestFilter {
 
             //Get session id
             String userToken = authorization.replace("Bearer ", "");
-//            logger.debug(authorization);
-//            logger.debug(userToken);
-//            logger.debug(Boolean.toString(TokenManager.Instance().checkAuthentification(userToken)));
+//            LOGGER.debug(authorization);
+//            LOGGER.debug(userToken);
+//            LOGGER.debug(Boolean.toString(TokenManager.Instance().checkAuthentification(userToken)));
             if (!TokenManager.Instance().checkAuthentification(userToken)) {
                 throw new WebApplicationException(accessDenied);
             }

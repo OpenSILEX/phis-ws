@@ -1,7 +1,7 @@
 //**********************************************************************************************
 //                                       SessionFactory.java 
 //
-// Author(s): Arnaud CHARLEROY 
+// Author(s): Arnaud Charleroy 
 // PHIS-SILEX version 1.0
 // Copyright © - INRA - 2016
 // Creation date: august 2016
@@ -24,11 +24,11 @@ import phis2ws.service.configuration.GlobalWebserviceValues;
 /**
  * Extrait les donnees de la requete de l'utilisateur 
  * et les lie à l'objet de l'annotation personnalisee @SessionInject
- * @author A. CHARLEROY
+ * @author A. Charleroy
  */
 public class SessionFactory implements Factory<Session> {
 
-    final static Logger logger = LoggerFactory.getLogger(SessionFactory.class);
+    final static Logger LOGGER = LoggerFactory.getLogger(SessionFactory.class);
 
     private final HttpServletRequest request;
 

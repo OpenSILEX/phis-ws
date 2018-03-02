@@ -1,7 +1,7 @@
 //**********************************************************************************************
 //                                       DAO.java 
 //
-// Author(s): Arnaud CHARLEROY
+// Author(s): Arnaud Charleroy
 // PHIS-SILEX version 1.0
 // Copyright © - INRA - 2016
 // Creation date: august 2016
@@ -14,7 +14,7 @@ package phis2ws.service.dao.manager;
 /**
  * Représente les fonctions de bases pour tout DAO
  *
- * @author Arnaud CHARLEROY
+ * @author Arnaud Charleroy
  * @param <T>
  */
 public abstract class DAO<T> {

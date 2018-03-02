@@ -1,7 +1,7 @@
 //**********************************************************************************************
 //                                       AbstractSQLDataSource.java 
 //
-// Author(s): Arnaud CHARLEROY
+// Author(s): Arnaud Charleroy
 // PHIS-SILEX version 1.0
 // Copyright © - INRA - 2016
 // Creation date: august 2016
@@ -19,12 +19,12 @@ import org.slf4j.LoggerFactory;
  * Représente une source de données avec les paramètres communs à toutes les
  * sources de données SQL
  *
- * @author Arnaud CHARLEROY
+ * @author Arnaud Charleroy
  */
 public abstract class AbstractSQLDataSource extends DataSource {
 
     // Récupération des logs
-    final static Logger logger = LoggerFactory.getLogger(AbstractSQLDataSource.class);
+    final static Logger LOGGER = LoggerFactory.getLogger(AbstractSQLDataSource.class);
     // Fichier de configuration
     protected static String propertyFileName;
 
