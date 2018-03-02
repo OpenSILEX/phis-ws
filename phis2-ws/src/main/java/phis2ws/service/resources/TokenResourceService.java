@@ -350,7 +350,6 @@ public class TokenResourceService {
             // LOGGER.debug(signedJWT.getPayload().toString());
             // LOGGER.debug(signedJWT.getHeader().toString());
             //SILEX:test
-
             if (ISSUERS_PUBLICKEY.containsKey(jwtClaimsSetParsed.getIssuer())) {
 
                 String FilePropertyName = PropertiesFileManager.getConfigFileProperty("service", ISSUERS_PUBLICKEY.get(jwtClaimsSetParsed.getIssuer()));

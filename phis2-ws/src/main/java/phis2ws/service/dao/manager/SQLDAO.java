@@ -664,7 +664,7 @@ public abstract class SQLDAO<T> extends DAO<T> {
     
     /**
      * Switch database according to jwt payload information 
-     * @param jwtClaimsSet 
+     * @param jwtClaimsSet set of claims in the jwt payload
      */
     public void setDataSourceFromJwtClaimsSet(JWTClaimsSet jwtClaimsSet) {
         if (jwtClaimsSet != null) {

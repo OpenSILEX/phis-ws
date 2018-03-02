@@ -22,8 +22,8 @@ public class Session {
     private String id;
     private String name;
     private User user;
-        private JWTClaimsSet jwtClaimsSet;
-
+    // in case of jwt
+    private JWTClaimsSet jwtClaimsSet;
 
     public Session() {
     }
@@ -48,7 +48,6 @@ public class Session {
         return dateEnd;
     }
 
-    
     /**
      * Session() - Initialise tous les champs de l'objet Session
      *
@@ -87,8 +86,8 @@ public class Session {
     }
 
     /**
-     * getFamilyName() - Récupère le nom de l'utilisateur correspondant à la session
- représentée par l'instanec de Session
+     * getFamilyName() - Récupère le nom de l'utilisateur correspondant à la
+     * session représentée par l'instanec de Session
      *
      * @return le nom de l'utilisateur
      * @date 25/11/2015
@@ -144,9 +143,8 @@ public class Session {
         this.name = name;
     }
 
-       //SILEX:conception
+    //SILEX:conception
     // Key payload during session if we need additionnal informations
-
     public JWTClaimsSet getJwtClaimsSet() {
         return jwtClaimsSet;
     }
