@@ -193,4 +193,8 @@ public final class DocumentationAnnotation {
 
     public static final String EXAMPLE_WAS_GENERATED_BY_DOCUMENT = EXAMPLE_DOCUMENT_URI;
     public static final String EXAMPLE_WAS_GENERATED_BY_DESCRIPTION = "Phenoscript v1.3";
+    
+    
+    public static final String EXAMPLE_TOKEN_JWT_CLIENTID = "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpc3MiOiJBbGZpcy1NVFAiLCJzdWIiOiJhbGZpc0BpbnJhLmZyIiwiaWF0IjoxNTEwMTMxMDExLCJleHAiOjE1NDE2NjcwMTF9.aJBEXeTcqKZMyRRBS-vnQCBcG7_pTQi0ChkyXQxABo587hkUqnVP27etu6buLNrqEZ8sZJtv54oBdvAAHi4vJoNPuSCsIYCA8h6pqNseuN3w5iOK3w-JjZUcu4CA6guSLJ5hK4eweLz5_8kszkC2pOSMMmXUvFSX-58Ia1ZS3rnzJkhbt0MJMu6P6BB81cQ1-g3GTsZm72rEv1cZ2pWn_mphTi-zEcaVqQDF_2bQLO5SmXGEeejPyf6yfryWA3Kfn3AACWyZSpffbJiwKB-AeGgEXCqKIocVRjnepSLbyDfRXC9Zz4KL8kCZ5MjY1nLybaEOryTW4VkuwMrPJG4zcA";
+    public static final String EXAMPLE_TOKEN_JWT_GRANTTYPE = "jwt";
 }

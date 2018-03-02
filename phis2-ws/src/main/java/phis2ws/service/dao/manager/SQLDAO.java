@@ -11,6 +11,7 @@
 //***********************************************************************************************
 package phis2ws.service.dao.manager;
 
+import com.nimbusds.jwt.JWTClaimsSet;
 import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.Date;
@@ -21,6 +22,8 @@ import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
@@ -38,6 +41,7 @@ import org.postgis.Geometry;
 import org.postgresql.util.PGobject;
 import phis2ws.service.authentication.TokenManager;
 import phis2ws.service.configuration.DefaultBrapiPaginationValues;
+import phis2ws.service.dao.datasource.DataSourceDAOPhisBrapi;
 import phis2ws.service.model.User;
 import phis2ws.service.utils.JsonConverter;
 import phis2ws.service.utils.sql.SQLQueryBuilder;
@@ -54,6 +58,15 @@ public abstract class SQLDAO<T> extends DAO<T> {
 
     private final static Logger logger = LoggerFactory.getLogger(SQLDAO.class);
     protected final static String DUPLICATE_KEY_ERROR_POSTGRE = "23505";
+
+    static final Map<String, DataSource> JWT_ISSUER_DATASOURCE;
+    protected static final String PHIS_MODEL_DB_LOCATION = "Phis";
+    // to manage multiple database switch
+    static {
+        Map<String, DataSource> tmpMap = new HashMap<>();
+        tmpMap.put(DAOPhisBrapi.PHIS_MODEL_DB_LOCATION, DataSourceDAOPhisBrapi.getInstance());
+        JWT_ISSUER_DATASOURCE = Collections.unmodifiableMap(tmpMap);
+    }
 
     /**
      * user c'est l'objet qui représente l'utilisateur
@@ -645,4 +658,17 @@ public abstract class SQLDAO<T> extends DAO<T> {
      * @return SQLQueryBuilder
      */
     protected abstract SQLQueryBuilder prepareSearchQuery();
+    
+    /**
+     * Switch database according to jwt payload information 
+     * @param jwtClaimsSet 
+     */
+    public void setDataSourceFromJwtClaimsSet(JWTClaimsSet jwtClaimsSet) {
+        if (jwtClaimsSet != null) {
+            String issuer = jwtClaimsSet.getIssuer();
+            if (JWT_ISSUER_DATASOURCE.containsKey(issuer)) {
+                this.dataSource = JWT_ISSUER_DATASOURCE.get(issuer);
+            }
+        }
+    }
 }

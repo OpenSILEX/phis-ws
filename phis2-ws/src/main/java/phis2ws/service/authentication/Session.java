@@ -1,5 +1,6 @@
 package phis2ws.service.authentication;
 
+import com.nimbusds.jwt.JWTClaimsSet;
 import phis2ws.service.model.User;
 
 /**
@@ -21,6 +22,8 @@ public class Session {
     private String id;
     private String name;
     private User user;
+        private JWTClaimsSet jwtClaimsSet;
+
 
     public Session() {
     }
@@ -141,4 +144,15 @@ public class Session {
         this.name = name;
     }
 
+       //SILEX:conception
+    // Key payload during session if we need additionnal informations
+
+    public JWTClaimsSet getJwtClaimsSet() {
+        return jwtClaimsSet;
+    }
+
+    public void setJwtClaimsSet(JWTClaimsSet jwtClaimsSet) {
+        this.jwtClaimsSet = jwtClaimsSet;
+    }
+    //\SILEX:conception
 }
