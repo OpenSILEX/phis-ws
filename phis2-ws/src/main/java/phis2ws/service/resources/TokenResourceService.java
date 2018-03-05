@@ -5,8 +5,8 @@
 // PHIS-SILEX version 1.0
 // Copyright © - INRA - 2015
 // Creation date: november 2015
-// Contact:arnaud.charleroy@supagro.inra.fr, anne.tireau@supagro.inra.fr, pascal.neveu@supagro.inra.fr
-// Last modification date:  October, 2016
+// Contact:arnaud.charleroy@inra.fr, anne.tireau@inra.fr, pascal.neveu@inra.fr
+// Last modification date:  March, 2018
 // Subject: Represents the token data service
 //***********************************************************************************************
 package phis2ws.service.resources;
@@ -73,8 +73,7 @@ import phis2ws.service.view.brapi.form.ResponseUnique;
  *
  * @author Samuël Chérimont
  * @date 26/11/2015
- * @update 03/08/2016 Ajout du JWT
- *         03/2018 Update for jwt
+ * @update 03/08/2016 Ajout du JWT 03/2018 Update for jwt
  * @see https://jwt.io/introduction/
  * @see
  * http://connect2id.com/products/nimbus-jose-jwt/examples/jwt-with-rsa-signature
@@ -92,15 +91,16 @@ public class TokenResourceService {
 
     static {
         Map<String, String> temporaryMap = new HashMap<>();
-        // can put multiple issuers
+        // can put multiple issuers of jwt
         temporaryMap.put("GnpIS", "gnpisPublicKeyFileName");
         temporaryMap.put("Phis", "phisPublicKeyFileName");
         ISSUERS_PUBLICKEY = Collections.unmodifiableMap(temporaryMap);
     }
     //SILEX:conception
-    // To keep claimset information during the loggin
+    // To keep jwt claimset information during the loggin
     private JWTClaimsSet jwtClaimsSet = null;
-   //\SILEX:conception
+    //\SILEX:conception
+
     /**
      * getToken() - Méthode appelé par la requête HTTP GET suivi de l'URI de la
      * classe TokenResourceService Crée un identifiant de session avec
@@ -109,7 +109,7 @@ public class TokenResourceService {
      *
      * exemple GET brapi/v1/jsonToken?username=true&password=true
      *
-     * @param jsonToken
+     * @param jsonToken body json
      * @param ui
      * @return un objet Response contenant le résultat en JSON ou une erreur de
      * type BAD_REQUEST
@@ -123,8 +123,20 @@ public class TokenResourceService {
      * propriétés
      * @update AC 07/2016 Ajout JWT et modification des fichiers de propriétés +
      * ajout DAO
-     * @update AC 08/2016 Moficiation des calls de l'APi BRAPI Exemple de Token
+     * @update AC 08/2016 Change BRAPI API class example Token
      * @update AC 03/2018 Cleaning usage of jwt
+     * JWT EXAMPLE 
+     * HEADER { "typ": "JWT", "alg": "RS256" } 
+     * PAYLOAD { "iss": "Phis", "sub": "morgane.vidal@supagro.inra.fr",
+     * "iat": 1520261602, "exp": 1583420358 } 
+     * PUBLIC KEY
+     * eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpc3MiOiJQaGlzIiwic3ViIjoibW9yZ2Fu
+     * ZS52aWRhbEBzdXBhZ3JvLmlucmEuZnIiLCJpYXQiOjE1MjAyNjE5NTgsImV4cCI6MTU4MzQyMD
+     * M1OH0.gbN40oHVLjowFiYFDnKw_vUQGFZBaRXmIRykBzuqavfYZnWHeFOTNd8J5k20dzuRrTCrLa
+     * dMVsDk1fw-E6DbA19IMQlGRnqMPjjsK9r36W42WyQ70GxloKMNFqFWBFfhs2CV3ND_UrSquXmDRwp
+     * wAtz4wXVna0isAuuSyqarb41AjkomG6XhpDxtJUXYESHFWvRurmu06OzILSMVNWUDJRPelzBeVSx
+     * iNGOrp56lGqBK2g4CUImVZsTaucSvWjSsu74E_HtOCA-UB0scaEwStrqsW_iwRJxyFTLWBxc6cXg1
+     * 6034hCqP5f_d9u4OmvhpKc_9CLb8oQVbmuflv52iOQ
      */
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
@@ -133,8 +145,10 @@ public class TokenResourceService {
             notes = "Returns an access token when the user is known and it issuer too",
             response = TokenResponseStructure.class)
     @ApiResponses(value = {
-        @ApiResponse(code = 201, message = "Access token created by user"),
-        @ApiResponse(code = 400, message = "Bad informations send by user"),
+        @ApiResponse(code = 201, message = "Access token created by user")
+        ,
+        @ApiResponse(code = 400, message = "Bad informations send by user")
+        ,
         @ApiResponse(code = 200, message = "Access token already exist and send again to user")})
     public Response getToken(@ApiParam(value = "JSON object needed to login", required = true) TokenDTO jsonToken, @Context UriInfo ui) {
         ArrayList<Status> statusList = new ArrayList<>();
@@ -175,7 +189,7 @@ public class TokenResourceService {
                 } else {
                     user = checkAuthentification(user, true);
                 }
-                
+
                 // No user found
                 if (user == null) {
                     statusList.add(new Status("User/password doesn't exist", StatusCodeMsg.ERR, null));
@@ -206,7 +220,7 @@ public class TokenResourceService {
                     final URI uri = new URI(ui.getPath());
                     return Response.status(reponseStatus).location(uri).entity(res).build();
                 }
-                
+
             } catch (NoSuchAlgorithmException | SQLException | URISyntaxException ex) {
                 LOGGER.error(ex.getMessage(), ex);
                 statusList.add(new Status("SQL " + StatusCodeMsg.ERR, StatusCodeMsg.ERR, ex.getMessage()));
@@ -232,8 +246,10 @@ public class TokenResourceService {
             notes = "Disconnect a logged user",
             response = ResponseUnique.class)
     @ApiResponses(value = {
-        @ApiResponse(code = 201, message = "Access token created by user"),
-        @ApiResponse(code = 400, message = "Bad informations send by user"),
+        @ApiResponse(code = 201, message = "Access token created by user")
+        ,
+        @ApiResponse(code = 400, message = "Bad informations send by user")
+        ,
         @ApiResponse(code = 200, message = "Access token already exist and send again to user")})
     public Response logOut(@ApiParam(value = "JSON object needed to login", required = true) LogoutDTO logout, @Context UriInfo ui) {
         ArrayList<Status> statusList = new ArrayList<>();
@@ -290,8 +306,9 @@ public class TokenResourceService {
 //        }
         return id;
     }
+
     /**
-     * 
+     *
      * @param user user instance to check
      * @param verifPassword if we need to verify the password
      * @return User|null an instance of user or null
@@ -300,9 +317,9 @@ public class TokenResourceService {
         UserDaoPhisBrapi uspb = new UserDaoPhisBrapi();
         // choose the database with payload information
         if (this.jwtClaimsSet != null) {
-           uspb.setDataSourceFromJwtClaimsSet(this.jwtClaimsSet);
+            uspb.setDataSourceFromJwtClaimsSet(this.jwtClaimsSet);
         }
-        
+
         final String password = user.getPassword();
 
         try {
@@ -321,7 +338,6 @@ public class TokenResourceService {
             //SILEX:test
             // LOGGER.debug(JsonConverter.ConvertToJson(user));
             //\SILEX:test
-
             return user;
         } catch (Exception ex) {
             LOGGER.error(ex.getMessage(), ex);
@@ -329,7 +345,7 @@ public class TokenResourceService {
 
         return null;
     }
-    
+
     /**
      * Verify and validate JWT
      *
@@ -353,7 +369,7 @@ public class TokenResourceService {
             if (ISSUERS_PUBLICKEY.containsKey(jwtClaimsSetParsed.getIssuer())) {
 
                 String FilePropertyName = PropertiesFileManager.getConfigFileProperty("service", ISSUERS_PUBLICKEY.get(jwtClaimsSetParsed.getIssuer()));
-               // verify the public key provenance  
+                // verify the public key provenance  
                 RSAPublicKey publicKey = PropertiesFileManager.parseBinaryPublicKey(FilePropertyName);
 
                 JWSVerifier verifier = new RSASSAVerifier(publicKey);

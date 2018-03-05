@@ -63,7 +63,7 @@ public abstract class SQLDAO<T> extends DAO<T> {
     protected static final String PHIS_MODEL_DB_LOCATION = "Phis";
         protected static final String GNPIS_MODEL_DB_LOCATION = "GnpIS";
 
-    // to manage multiple database switch
+    // to manage multiple database switch 
     static {
         Map<String, DataSource> tmpMap = new HashMap<>();
         tmpMap.put(DAOPhisBrapi.PHIS_MODEL_DB_LOCATION, DataSourceDAOPhisBrapi.getInstance());
