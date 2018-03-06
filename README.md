@@ -1,2 +1,3 @@
-# phis2-ws
-Web services REST for PHIS2
+# phis-ws
+Web services REST for PHIS
+
