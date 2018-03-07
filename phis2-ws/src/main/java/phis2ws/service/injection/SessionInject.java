@@ -1,7 +1,7 @@
 //**********************************************************************************************
 //                                       SessionInject.java 
 //
-// Author(s): Arnaud CHARLEROY
+// Author(s): Arnaud Charleroy
 // PHIS-SILEX version 1.0
 // Copyright © - INRA - 2016
 // Creation date: august 2016
@@ -24,7 +24,7 @@ import java.lang.annotation.Target;
  * 
  * @see https://jersey.java.net/documentation/latest/ioc.html
  * @date 07/16
- * @author A. CHARLEROY
+ * @author A. Charleroy
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)

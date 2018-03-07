@@ -1,7 +1,7 @@
 //**********************************************************************************************
 //                                       JoinAttributes.java 
 //
-// Author(s): Arnaud CHARLEROY 
+// Author(s): Arnaud Charleroy 
 // PHIS-SILEX version 1.0
 // Copyright © - INRA - 2016
 // Creation date: october 2016
@@ -15,7 +15,7 @@ import javax.inject.Singleton;
 
 /**
  * Liste des jointures
- * @author A. CHARLEROY
+ * @author A. Charleroy
  */
 @Singleton
 public final class JoinAttributes {

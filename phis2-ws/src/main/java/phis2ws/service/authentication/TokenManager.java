@@ -24,7 +24,7 @@ import phis2ws.service.view.brapi.form.ResponseFormGET;
  */
 public class TokenManager {
 
-    static final Logger logger = LoggerFactory.getLogger(TokenManager.class);
+    static final Logger LOGGER = LoggerFactory.getLogger(TokenManager.class);
     private ArrayList<Session> listSession;
     private ArrayList<SessionThread> listThread;
     private static TokenManager _instance = null;
@@ -176,7 +176,7 @@ public class TokenManager {
             this.listSession = new ArrayList();
         }
         this.listSession.add(session);
-//        logger.debug(this.listSession.toString());
+//        LOGGER.debug(this.listSession.toString());
         //BD
        SessionDaoPhisBrapi sessionDao = new SessionDaoPhisBrapi(); 
         try {
@@ -253,7 +253,7 @@ public class TokenManager {
         } 
         this.listSession.add(session); 
         this.addThread(session.getId(), session.getName()); 
-//        logger.debug(JsonConverter.ConvertToJson(this.listSession)); 
+//        LOGGER.debug(JsonConverter.ConvertToJson(this.listSession)); 
     } 
     
     /**

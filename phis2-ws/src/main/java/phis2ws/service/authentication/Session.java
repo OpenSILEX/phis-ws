@@ -1,5 +1,6 @@
 package phis2ws.service.authentication;
 
+import com.nimbusds.jwt.JWTClaimsSet;
 import phis2ws.service.model.User;
 
 /**
@@ -11,7 +12,7 @@ import phis2ws.service.model.User;
  * @author Samuël Chérimont
  * @date 25/11/2015
  * @note Les champs dateStart et dateEnd ne sont pas utilisés pour le moment
- * @update Anraud CHARLEROY Définir SQLDBModel et les cahmps uniques dans
+ * @update Anraud Charleroy Définir SQLDBModel et les cahmps uniques dans
  * Session
  */
 public class Session {
@@ -21,6 +22,8 @@ public class Session {
     private String id;
     private String name;
     private User user;
+    // in case of jwt
+    private JWTClaimsSet jwtClaimsSet;
 
     public Session() {
     }
@@ -45,7 +48,6 @@ public class Session {
         return dateEnd;
     }
 
-    
     /**
      * Session() - Initialise tous les champs de l'objet Session
      *
@@ -84,8 +86,8 @@ public class Session {
     }
 
     /**
-     * getFamilyName() - Récupère le nom de l'utilisateur correspondant à la session
- représentée par l'instanec de Session
+     * getFamilyName() - Récupère le nom de l'utilisateur correspondant à la
+     * session représentée par l'instanec de Session
      *
      * @return le nom de l'utilisateur
      * @date 25/11/2015
@@ -141,4 +143,14 @@ public class Session {
         this.name = name;
     }
 
+    //SILEX:conception
+    // Key payload during session if we need additionnal informations
+    public JWTClaimsSet getJwtClaimsSet() {
+        return jwtClaimsSet;
+    }
+
+    public void setJwtClaimsSet(JWTClaimsSet jwtClaimsSet) {
+        this.jwtClaimsSet = jwtClaimsSet;
+    }
+    //\SILEX:conception
 }

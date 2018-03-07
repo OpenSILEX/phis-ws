@@ -1,7 +1,7 @@
 //**********************************************************************************************
 //                                       Status.java 
 //
-// Author(s): Arnaud CHARLEROY
+// Author(s): Arnaud Charleroy
 // PHIS-SILEX version 1.0
 // Copyright © - INRA - 2016
 // Creation date: august 2016
@@ -14,7 +14,7 @@ package phis2ws.service.view.brapi;
 /**
  * Implémentation de la plant breeding api pour les status des messages de retour.
  * Il est possible de mettre des codes Error ou autre
- * @author Arnaud CHARLEROY
+ * @author Arnaud Charleroy
  */
 public class Status {
 

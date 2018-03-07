@@ -1,7 +1,7 @@
 //**********************************************************************************************
 //                                       DateFormats.java 
 //
-// Author(s): Arnaud CHARLEROY
+// Author(s): Arnaud Charleroy
 // PHIS-SILEX version 1.0
 // Copyright © - INRA - 2016
 // Creation date: august 2016
@@ -16,7 +16,7 @@ import java.util.List;
 
 /**
  * contains the date formats used in the web service
- * @author A. CHARLEROY
+ * @author A. Charleroy
  */
 public final class DateFormats {
 

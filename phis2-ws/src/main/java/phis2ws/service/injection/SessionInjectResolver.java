@@ -1,7 +1,7 @@
 //**********************************************************************************************
 //                                       SessionInjectResolver.java 
 //
-// Author(s): Arnaud CHARLEROY
+// Author(s): Arnaud Charleroy
 // PHIS-SILEX version 1.0
 // Copyright © - INRA - 2016
 // Creation date: august 2016
@@ -23,7 +23,7 @@ import phis2ws.service.authentication.Session;
 /**
  * Permet de repérer l'utilisation de l'annotation Session Inject
  * @see https://jersey.java.net/documentation/latest/ioc.html
- * @author A. CHARLEROY
+ * @author A. Charleroy
  */
 public class SessionInjectResolver implements InjectionResolver<SessionInject> {
 

@@ -1,7 +1,7 @@
 //**********************************************************************************************
 //                                       DAOMongo.java 
 //
-// Author(s): Arnaud CHARLEROY
+// Author(s): Arnaud Charleroy
 // PHIS-SILEX version 1.0
 // Copyright © - INRA - 2016
 // Creation date: august 2016
@@ -27,7 +27,7 @@ import phis2ws.service.model.User;
  * Répresente une définition de la classe DAO permettant de se connecter à la
  * source de données MongoDB
  *
- * @author Arnaud CHARLEROY
+ * @author Arnaud Charleroy
  * @param <T>
  */
 public abstract class DAOMongo<T> {
