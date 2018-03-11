@@ -6,12 +6,13 @@
 // Copyright © - INRA - 2017
 // Creation date: March 2017
 // Contact: arnaud.charleroy@inra.fr, morgane.vidal@inra.fr, anne.tireau@inra.fr, pascal.neveu@inra.fr
-// Last modification date:  March, 2017
+// Last modification date:  March, 2018 (add additionalDocumentProperties attribute)
 // Subject: Represents the Document
 //***********************************************************************************************
 package phis2ws.service.view.model.phis;
 
 import java.util.ArrayList;
+import phis2ws.service.resources.dto.AdditionalDocumentPropertiesDTO;
 import phis2ws.service.resources.dto.ConcernItemDTO;
 
 public class Document {
@@ -25,6 +26,8 @@ public class Document {
     private String comment;
     private ArrayList<ConcernItemDTO> concernedItems = new ArrayList<>();
     private String status;
+    private ArrayList<AdditionalDocumentPropertiesDTO> additionnalProperties = new ArrayList<>();
+
 
     public String getUri() {
         return uri;
@@ -110,10 +113,25 @@ public class Document {
         this.status = status;
     }
     
+    public ArrayList<AdditionalDocumentPropertiesDTO> getAdditionnalProperties() {
+        return additionnalProperties;
+    }
+
+    public void setAdditionnalProperties(ArrayList<AdditionalDocumentPropertiesDTO> additionnalProperties) {
+        this.additionnalProperties = additionnalProperties;
+    }
+    
+    public void addAdditionnalProperties(AdditionalDocumentPropertiesDTO additionnalProperties) {
+        this.additionnalProperties.add(additionnalProperties);
+    }
+    //SILEX:conception
+    //may be add additionnal properties comparison ?
+    //\SILEX:conception
     /**
-     * Compare les deux documents (compare les attributs un à un)
-     * @param document Document à comparer à this
-     * @return true s'ils sont égaux, false sinon
+     * Compare two documents together (compare attributes one by one)
+     * @todo add additionnal properties comparison
+     * @param document Document to compare to this one
+     * @return true if there are equals else false
      */
     public boolean equals(Document document) {
         return this.uri.equals(document.uri)

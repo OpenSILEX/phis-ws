@@ -281,7 +281,7 @@ public abstract class SPARQLStringBuilder {
     }
 
     /**
-     *
+     * Clear query builder parts
      */
     protected void clearBuilder() {
         blankNodeCounter = 0;
@@ -293,5 +293,9 @@ public abstract class SPARQLStringBuilder {
         sesameUriFormObject = null;
         sesameUriFormPredicat = null;
         sesameUriFormSubject = null;
+    }
+    
+    public String getFilter() {
+        return filter;
     }
 }
