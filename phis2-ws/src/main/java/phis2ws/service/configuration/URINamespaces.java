@@ -142,7 +142,7 @@ public class URINamespaces {
         OBJECTS.put("cMethod", CONTEXTS.get("pVoc2017") + "#Method");
         OBJECTS.put("cUnit", CONTEXTS.get("pVoc2017") + "#Unit");
         OBJECTS.put("cVector", CONTEXTS.get("pVoc2017") + "#Vector");
-        OBJECTS.put("cSensor", CONTEXTS.get("pVoc2017") + "#Sensor");
+        OBJECTS.put("cSensingDevice", CONTEXTS.get("pVoc2017") + "#SensingDevice");
     }
 
     private void setRelations() {
@@ -162,6 +162,11 @@ public class URINamespaces {
         RELATIONS.put("rHasTrait", CONTEXTS.get("pVoc2017") + "#hasTrait");
         RELATIONS.put("rHasMethod", CONTEXTS.get("pVoc2017") + "#hasMethod");
         RELATIONS.put("rHasUnit", CONTEXTS.get("pVoc2017") + "#hasUnit");
+        RELATIONS.put("rHasBrand", CONTEXTS.get("pVoc2017") + "#hasBrand");
+        RELATIONS.put("rMeasuredVariable", CONTEXTS.get("pVoc2017") + "#measuredVariable");
+        RELATIONS.put("rInServiceDate", CONTEXTS.get("pVoc2017") + "#inServiceDate");
+        RELATIONS.put("rDateOfPurchase", CONTEXTS.get("pVoc2017") + "#dateOfPurchase");
+        RELATIONS.put("rDateOfLastCalibration", CONTEXTS.get("pVoc2017") + "#dateOfLastCalibration");
         
         
         //Relations skos

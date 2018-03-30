@@ -12,13 +12,12 @@
 package phis2ws.service.utils;
 
 import java.util.Calendar;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import phis2ws.service.PropertiesFileManager;
 import phis2ws.service.configuration.URINamespaces;
 import phis2ws.service.dao.sesame.AgronomicalObjectDaoSesame;
 import phis2ws.service.dao.sesame.MethodDaoSesame;
 import phis2ws.service.dao.sesame.SensorDAOSesame;
+import phis2ws.service.dao.sesame.UriDaoSesame;
 import phis2ws.service.dao.sesame.TraitDaoSesame;
 import phis2ws.service.dao.sesame.UnitDaoSesame;
 import phis2ws.service.dao.sesame.VariableDaoSesame;
@@ -254,9 +253,11 @@ public class UriGenerator {
         
         URINamespaces uriNamespaces = new URINamespaces();
         
-        if (uriNamespaces.getObjectsProperty("cVector").equals(instanceType)) {
+        UriDaoSesame uriDaoSesame = new UriDaoSesame();
+        
+        if (uriDaoSesame.isSubClassOf(instanceType, uriNamespaces.getObjectsProperty("cVector"))) {
             return generateVectorUri(year);
-        } else if (uriNamespaces.getObjectsProperty("cSensor").equals(instanceType)) {
+        } else if (uriDaoSesame.isSubClassOf(instanceType, uriNamespaces.getObjectsProperty("cSensingDevice"))) {
             return generateSensorUri(year);
         } else if (uriNamespaces.getObjectsProperty("cVariable").equals(instanceType)) {
             return generateVariableUri();
@@ -266,11 +267,8 @@ public class UriGenerator {
             return generateMethodUri();
         } else if (uriNamespaces.getObjectsProperty("cUnit").equals(instanceType)) {
             return generateUnitUri();
-        } else {
-            AgronomicalObjectDaoSesame agronomicalObjectDAO = new AgronomicalObjectDaoSesame();
-            if (agronomicalObjectDAO.isObjectAgronomicalObject(instanceType)) {
-                return generateAgronomicalObjectUri(year);
-            }
+        } else if (uriDaoSesame.isSubClassOf(instanceType, uriNamespaces.getObjectsProperty("cAgronomicalObject"))){
+            return generateAgronomicalObjectUri(year);
         }
         
         return null;
