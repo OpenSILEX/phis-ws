@@ -1,7 +1,7 @@
 //**********************************************************************************************
 //                                       DocumentResourceService.java 
 //
-// Author(s): Arnaud Charleroy, Morgane VIDAL
+// Author(s): Arnaud Charleroy, Morgane Vidal
 // PHIS-SILEX version 1.0
 // Copyright © - INRA - 2016
 // Creation date: august 2016
@@ -94,6 +94,7 @@ public class DocumentResourceService {
     final static Logger LOGGER = LoggerFactory.getLogger(DocumentResourceService.class);
 
     //manage waiting document metadata
+
     public final static ExecutorService threadPool = Executors.newCachedThreadPool();
     //two Maps which contains information about waiting document metadata
     public final static Map<String, Boolean> waitingAnnotFileCheck = new HashMap<>();
