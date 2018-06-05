@@ -11,8 +11,12 @@
 //***********************************************************************************************
 package phis2ws.service.dao.manager;
 
+import java.util.Map;
+import java.util.Optional;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
+import org.eclipse.rdf4j.model.Literal;
+import org.eclipse.rdf4j.model.Value;
 import org.eclipse.rdf4j.query.MalformedQueryException;
 import org.eclipse.rdf4j.query.QueryEvaluationException;
 import org.eclipse.rdf4j.query.QueryLanguage;
@@ -142,7 +146,7 @@ public abstract class DAOSesame<T> {
 
     /**
      * Retourne le paramètre taille de la page
-     * @return 
+     * @return
      */
     public Integer getPageSize() {
         if (pageSize == null || pageSize < 0) {
@@ -183,12 +187,11 @@ public abstract class DAOSesame<T> {
 //        LOGGER.trace(query.toString());
         return exist;
     }
-    
+
     /**
-     * 
+     *
      * @param objectURI l'uri de l'objet recherché
-     * @return true si l'objet est dans le triplestore,
-     *         false sinon
+     * @return true si l'objet est dans le triplestore, false sinon
      */
     public boolean existObject(String objectURI) {
         SPARQLQueryBuilder query = new SPARQLQueryBuilder();
@@ -201,7 +204,7 @@ public abstract class DAOSesame<T> {
                 return true;
             }
         }
-        
+
         return false;
     }
 
@@ -248,9 +251,9 @@ public abstract class DAOSesame<T> {
      * @return Integer
      */
     public abstract Integer count() throws RepositoryException, MalformedQueryException, QueryEvaluationException;
-    
+
     /**
-     * 
+     *
      * @return Les logs qui seront utilisés pour la traçabilité
      */
     protected String getTraceabilityLogs() {
@@ -261,10 +264,10 @@ public abstract class DAOSesame<T> {
         if (user != null) {
             log += "User : " + user.getEmail() + " - ";
         }
-        
+
         return log;
     }
-    
+
     /**
      * Définit un objet utilisateur à partir d'un identifiant
      *
@@ -276,6 +279,29 @@ public abstract class DAOSesame<T> {
             throw new WebApplicationException(Response.status(Response.Status.UNAUTHORIZED).build());
         } else {
             this.user = TokenManager.Instance().getSession(id).getUser();
+        }
+    }
+
+    /**
+     * Fill a map with labels from binding set value
+     *
+     * @param labelMap this map will fill with the label
+     * @param labelValue label binding set value
+     */
+    protected void retreiveBindingValueLabelInMap(Map labelMap, Value labelValue) {
+        if (labelValue != null) {
+            // if label is a literal we will be able to retreive this langage programmatically
+            if (labelValue instanceof Literal) {
+                Literal literal = (Literal) labelValue;
+                Optional<String> propertyLanguage = literal.getLanguage();
+                if (propertyLanguage.isPresent()) {
+                    labelMap.put(propertyLanguage.get(), labelValue.stringValue());
+                } else {
+                    labelMap.put("default", labelValue.stringValue());
+                }
+            } else {
+                labelMap.put("unknown lang", labelValue.stringValue());
+            }
         }
     }
 }

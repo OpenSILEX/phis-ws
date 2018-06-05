@@ -6,7 +6,7 @@
 // Copyright © - INRA - 2016
 // Creation date: august 2016
 // Contact:arnaud.charleroy@inra.fr, morgane.vidal@inra.fr, anne.tireau@inra.fr, pascal.neveu@inra.fr
-// Last modification date:  March, 2017
+// Last modification date:  March, 2018
 // Subject: Represents the documents service
 //***********************************************************************************************
 package phis2ws.service.resources;
@@ -66,6 +66,7 @@ import phis2ws.service.documentation.DocumentationAnnotation;
 import phis2ws.service.documentation.StatusCodeMsg;
 import phis2ws.service.injection.SessionInject;
 import phis2ws.service.resources.dto.DocumentMetadataDTO;
+import phis2ws.service.resources.dto.DocumentMetadataSearchDTO;
 import phis2ws.service.utils.DocumentWaitingCheck;
 import phis2ws.service.utils.FileUploader;
 import phis2ws.service.utils.POSTResultsReturn;
@@ -73,47 +74,54 @@ import phis2ws.service.utils.ResourcesUtils;
 import phis2ws.service.view.brapi.Status;
 import phis2ws.service.view.brapi.form.AbstractResultForm;
 import phis2ws.service.view.brapi.form.ResponseFormDocumentMetadata;
+import phis2ws.service.view.brapi.form.ResponseFormDocumentProperty;
 import phis2ws.service.view.brapi.form.ResponseFormDocumentType;
 import phis2ws.service.view.brapi.form.ResponseFormGET;
 import phis2ws.service.view.brapi.form.ResponseFormPOST;
 import phis2ws.service.view.model.phis.Document;
+import phis2ws.service.view.model.phis.DocumentProperty;
 
 @Api("/documents")
 @Path("/documents")
 public class DocumentResourceService {
+
     @Context
     UriInfo uri;
-    
+
     @SessionInject
     Session userSession;
-    
+
     final static Logger LOGGER = LoggerFactory.getLogger(DocumentResourceService.class);
-    
-    // Gère les annotations en attene
+
+    //manage waiting document metadata
+
     public final static ExecutorService threadPool = Executors.newCachedThreadPool();
-    // Deux Maps qui contiennent les informations sur les annotations en attentes
+    //two Maps which contains information about waiting document metadata
     public final static Map<String, Boolean> waitingAnnotFileCheck = new HashMap<>();
     public final static Map<String, DocumentMetadataDTO> waitingAnnotInformation = new HashMap<>();
-    
+
     /**
-     * Vérifie un ensemble d'annotation au format JSON
+     * Verify document metadata before save it
      *
-     * @param headers Entête de la requête
-     * @param documentsAnnotations documentsAnnotations
-     * @return
+     * @param headers request headers
+     * @param documentsAnnotations documentsAnnotations json body
+     * @return response contains if the metadata have been saved correctly
      */
     @POST
     @ApiOperation(value = "Save a file", notes = DocumentationAnnotation.USER_ONLY_NOTES)
     @ApiResponses(value = {
-        @ApiResponse(code = 202, message = "Metadata verified and correct", response = DocumentMetadataDTO.class, responseContainer = "List"),
-        @ApiResponse(code = 400, message = DocumentationAnnotation.BAD_USER_INFORMATION),
-        @ApiResponse(code = 401, message = DocumentationAnnotation.USER_NOT_AUTHORIZED),
+        @ApiResponse(code = 202, message = "Metadata verified and correct", response = DocumentMetadataDTO.class, responseContainer = "List")
+        ,
+        @ApiResponse(code = 400, message = DocumentationAnnotation.BAD_USER_INFORMATION)
+        ,
+        @ApiResponse(code = 401, message = DocumentationAnnotation.USER_NOT_AUTHORIZED)
+        ,
         @ApiResponse(code = 500, message = DocumentationAnnotation.ERROR_SEND_DATA)})
     @ApiImplicitParams({
-       @ApiImplicitParam(name = "Authorization", required = true,
-                         dataType = "string", paramType = "header",
-                         value = DocumentationAnnotation.ACCES_TOKEN,
-                         example = GlobalWebserviceValues.AUTHENTICATION_SCHEME + " ")
+        @ApiImplicitParam(name = "Authorization", required = true,
+                dataType = "string", paramType = "header",
+                value = DocumentationAnnotation.ACCES_TOKEN,
+                example = GlobalWebserviceValues.AUTHENTICATION_SCHEME + " ")
     })
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
@@ -121,30 +129,30 @@ public class DocumentResourceService {
             @ApiParam(value = "JSON Document metadata", required = true) List<DocumentMetadataDTO> documentsAnnotations) throws RepositoryException {
         AbstractResultForm postResponse;
         if (documentsAnnotations != null && !documentsAnnotations.isEmpty()) {
-            //Insertion du document
+            //insert document process started
             DocumentDaoSesame documentDao = new DocumentDaoSesame();
             documentDao.user = userSession.getUser();
-            //Vérification des documentsAnnotations
+            //metadata verification
             final POSTResultsReturn checkAnnots = documentDao.check(documentsAnnotations);
-            
-            if (checkAnnots.statusList == null) { //Les annotations ne sont pas bonnes
+
+            if (checkAnnots.statusList == null) { //metadata verification failed
                 postResponse = new ResponseFormPOST();
-            } else if (checkAnnots.getDataState()) { // Si les annotations sont bonnes
+            } else if (checkAnnots.getDataState()) { //metadata verification succeed
                 List<String> uriList = new ArrayList<>();
                 Iterator<DocumentMetadataDTO> itdocsMetadata = documentsAnnotations.iterator();
                 while (itdocsMetadata.hasNext()) {
                     DocumentMetadataDTO docsM = itdocsMetadata.next();
-                    //Construction des URI
+                    //building URI
                     final UriBuilder uploadPath = uri.getBaseUriBuilder();
                     String name = new StringBuilder("document").append(ResourcesUtils.getUniqueID()).toString(); // docsM + idUni
-                    final URINamespaces uriNS = new URINamespaces(); 
+                    final URINamespaces uriNS = new URINamespaces();
                     final String docsUri = uriNS.getContextsProperty("documents") + "/" + name;
                     final String uploadLink = uploadPath.path("documents").path("upload").queryParam("uri", docsUri).toString();
-//                  //Ajout URI en attente
+                    //add URI in list of document that will be sent
                     uriList.add(uploadLink);
-                    waitingAnnotFileCheck.put(docsUri, false); // fichier en attente
+                    waitingAnnotFileCheck.put(docsUri, false); //file waiting
                     waitingAnnotInformation.put(docsUri, docsM);
-//                        //Lancement THREAD pour le fichier en attente
+                    //start THREAD for this waiting file
                     threadPool.submit(new DocumentWaitingCheck(docsUri));
                 }
                 final Status waitingTimeStatus = new Status("Timeout", StatusCodeMsg.INFO, " Timeout :" + PropertiesFileManager.getConfigFileProperty("service", "waitingFileTime") + " seconds");
@@ -159,30 +167,34 @@ public class DocumentResourceService {
             return Response.status(Response.Status.BAD_REQUEST).entity(new ResponseFormPOST()).build();
         }
     }
-    
+
     /**
-     * Adresse du fichier a envoyer
+     * file uri to send
      *
-     * @param in Fichier
-     * @param docUri Uri de l'annotation
-     * @param headers Entête de la requête
-     * @param request
-     * @return
+     * @param in File
+     * @param docUri annotation uri
+     * @param headers request headers
+     * @param request request object
+     * @return return document uri if the file has been successfully sent or an
+     * error message
      * @throws URISyntaxException
      */
     @POST
     @Path("upload")
     @ApiOperation(value = "Post data file", notes = DocumentationAnnotation.USER_ONLY_NOTES + " Not working from this documentation. Implement a client or use Postman application.")
     @ApiResponses(value = {
-        @ApiResponse(code = 201, message = "Document file and document metadata saved", response = ResponseFormPOST.class),
-        @ApiResponse(code = 400, message = DocumentationAnnotation.BAD_USER_INFORMATION),
-        @ApiResponse(code = 401, message = DocumentationAnnotation.USER_NOT_AUTHORIZED),
+        @ApiResponse(code = 201, message = "Document file and document metadata saved", response = ResponseFormPOST.class)
+        ,
+        @ApiResponse(code = 400, message = DocumentationAnnotation.BAD_USER_INFORMATION)
+        ,
+        @ApiResponse(code = 401, message = DocumentationAnnotation.USER_NOT_AUTHORIZED)
+        ,
         @ApiResponse(code = 500, message = DocumentationAnnotation.ERROR_SEND_DATA)})
     @ApiImplicitParams({
-       @ApiImplicitParam(name = "Authorization", required = true,
-                         dataType = "string", paramType = "header",
-                         value = DocumentationAnnotation.ACCES_TOKEN,
-                         example = GlobalWebserviceValues.AUTHENTICATION_SCHEME + " ")
+        @ApiImplicitParam(name = "Authorization", required = true,
+                dataType = "string", paramType = "header",
+                value = DocumentationAnnotation.ACCES_TOKEN,
+                example = GlobalWebserviceValues.AUTHENTICATION_SCHEME + " ")
     })
     @Consumes(MediaType.APPLICATION_OCTET_STREAM)
     @Produces(MediaType.APPLICATION_JSON)
@@ -193,54 +205,52 @@ public class DocumentResourceService {
             @Context HttpServletRequest request) throws URISyntaxException {
         ResponseFormPOST postResponse = null;
         List<Status> statusList = new ArrayList();
-        
-        // Annotation présente
-        if (!waitingAnnotFileCheck.containsKey(docUri)) { 
+
+        //check annotation existence
+        if (!waitingAnnotFileCheck.containsKey(docUri)) {
             statusList.add(new Status("No waiting file", "Error", "No waiting file for the following uri : " + docUri));
             postResponse = new ResponseFormPOST(statusList);
             return Response.status(Response.Status.BAD_REQUEST).entity(postResponse).build();
         }
-        
+
         if (headers != null && headers.getLength() <= 0) {
             statusList.add(new Status("File error", "Error", "File Size : " + headers.getLength() + " octets"));
             postResponse = new ResponseFormPOST(statusList);
             return Response.status(Response.Status.BAD_REQUEST).entity(postResponse).build();
         }
-        
-        // Vérification du checksum md5
+
+        //verify md5 checksum 
         String hash = getHash(in);
         if (hash != null && !waitingAnnotInformation.get(docUri).getChecksum().equals(hash)) {
             statusList.add(new Status("MD5 error", "Error", "Checksum MD5 doesn't match. Corrupted File."));
             postResponse = new ResponseFormPOST(statusList);
             return Response.status(Response.Status.BAD_REQUEST).entity(postResponse).build();
         }
-        
+
         String media = waitingAnnotInformation.get(docUri).getDocumentType();
         media = media.substring(media.lastIndexOf("#") + 1, media.length());
         FileUploader jsch = new FileUploader();
         try {
-            waitingAnnotFileCheck.put(docUri, Boolean.TRUE); // Traitement en cours du fichier
+            waitingAnnotFileCheck.put(docUri, Boolean.TRUE); // Preparing file insertion
             LOGGER.debug(jsch.getSFTPWorkingDirectory() + "/" + media);
-            //SILEX:test
             jsch.getChannelSftp().cd(jsch.getSFTPWorkingDirectory());
-            //\SILEX:test
         } catch (SftpException e) {
             statusList.add(new Status("SftException", StatusCodeMsg.ERR, e.getMessage()));
             LOGGER.error(e.getMessage(), e);
         }
-        
+
         final String serverFileName = ResourcesUtils.getUniqueID() + "." + waitingAnnotInformation.get(docUri).getExtension();
         final String serverFilePath = jsch.getSFTPWorkingDirectory() + "/" + serverFileName;
-        
+
         boolean fileTransfered = jsch.fileTransfer(in, serverFileName);
         jsch.closeConnection();
-        
-        if (!fileTransfered) { // Si le fichier n'a pas été enregistré
+
+        if (!fileTransfered) { // Error during file writing
             statusList.add(new Status("File upload error", "Error", "Problem during file upload. Try to submit it again " + docUri));
             postResponse = new ResponseFormPOST(statusList);
             return Response.status(Response.Status.BAD_REQUEST).entity(postResponse).build();
         }
-        
+
         waitingAnnotInformation.get(docUri).setServerFilePath(serverFilePath);
         DocumentDaoSesame documentsDao = DAOFactory.getSESAMEDAOFactory().getDocumentsDaoSesame();
         if (request.getRemoteAddr() != null) {
@@ -251,7 +261,7 @@ public class DocumentResourceService {
 
         postResponse = new ResponseFormPOST(insertAnnotationJSON.statusList);
 
-        if (insertAnnotationJSON.getDataState()) { // Etat du fichier JSON
+        if (insertAnnotationJSON.getDataState()) { // Json state
             waitingAnnotFileCheck.remove(docUri);
             waitingAnnotInformation.remove(docUri);
             if (insertAnnotationJSON.getHttpStatus() == Response.Status.CREATED) {
@@ -264,7 +274,7 @@ public class DocumentResourceService {
         }
         return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(new ResponseFormPOST()).build();
     }
-    
+
     private String getHash(File in) {
         String hash = null;
         try {
@@ -274,22 +284,24 @@ public class DocumentResourceService {
         }
         return hash;
     }
-    
+
     @GET
     @Path("types")
     @ApiOperation(value = "Get all documents types",
             notes = "Retrieve all documents types ")
     @ApiResponses(value = {
-        @ApiResponse(code = 200, message = "Retrieve all documents type"),
-//                , response = Experiment.class, responseContainer = "List"),
-        @ApiResponse(code = 400, message = DocumentationAnnotation.BAD_USER_INFORMATION),
-        @ApiResponse(code = 401, message = DocumentationAnnotation.USER_NOT_AUTHORIZED),
+        @ApiResponse(code = 200, message = "Retrieve all documents type")
+        ,
+        @ApiResponse(code = 400, message = DocumentationAnnotation.BAD_USER_INFORMATION)
+        ,
+        @ApiResponse(code = 401, message = DocumentationAnnotation.USER_NOT_AUTHORIZED)
+        ,
         @ApiResponse(code = 500, message = DocumentationAnnotation.ERROR_FETCH_DATA)})
     @ApiImplicitParams({
-       @ApiImplicitParam(name = "Authorization", required = true,
-                         dataType = "string", paramType = "header",
-                         value = DocumentationAnnotation.ACCES_TOKEN,
-                         example = GlobalWebserviceValues.AUTHENTICATION_SCHEME + " ")
+        @ApiImplicitParam(name = "Authorization", required = true,
+                dataType = "string", paramType = "header",
+                value = DocumentationAnnotation.ACCES_TOKEN,
+                example = GlobalWebserviceValues.AUTHENTICATION_SCHEME + " ")
     })
     @Produces(MediaType.APPLICATION_JSON)
     public Response getDocumentsType(
@@ -308,9 +320,9 @@ public class DocumentResourceService {
         }
         return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(new ResponseFormGET(errorStatus)).build();
     }
-    
+
     /**
-     * 
+     *
      * @param limit
      * @param page
      * @param uri
@@ -322,43 +334,41 @@ public class DocumentResourceService {
      * @param extension
      * @param concernedItem
      * @param status
-     * @return le résultat de la requête
+     * @return Request result
      */
     @GET
     @ApiOperation(value = "Get all documents metadata corresponding to the searched params given",
-                  notes = "Retrieve all documents authorized for the user corresponding to the searched params given")
+            notes = "Retrieve all documents authorized for the user corresponding to the searched params given")
     @ApiResponses(value = {
-        @ApiResponse(code = 200, message = "Retrieve all documents ", response = DocumentMetadataDTO.class, responseContainer = "List"),
-        @ApiResponse(code = 400, message = DocumentationAnnotation.BAD_USER_INFORMATION),
-        @ApiResponse(code = 401, message = DocumentationAnnotation.USER_NOT_AUTHORIZED),
+        @ApiResponse(code = 200, message = "Retrieve all documents ", response = DocumentMetadataDTO.class, responseContainer = "List")
+        ,
+        @ApiResponse(code = 400, message = DocumentationAnnotation.BAD_USER_INFORMATION)
+        ,
+        @ApiResponse(code = 401, message = DocumentationAnnotation.USER_NOT_AUTHORIZED)
+        ,
         @ApiResponse(code = 500, message = DocumentationAnnotation.ERROR_FETCH_DATA)})
     @ApiImplicitParams({
         @ApiImplicitParam(name = "Authorization", required = true,
-                          dataType = "string", paramType = "header",
-                          value = DocumentationAnnotation.ACCES_TOKEN,
-                          example = GlobalWebserviceValues.AUTHENTICATION_SCHEME + " ")
+                dataType = "string", paramType = "header",
+                value = DocumentationAnnotation.ACCES_TOKEN,
+                example = GlobalWebserviceValues.AUTHENTICATION_SCHEME + " ")
     })
     @Produces(MediaType.APPLICATION_JSON)
     public Response getDocumentsMetadataBySearch(
-        @ApiParam(value = DocumentationAnnotation.PAGE_SIZE) @QueryParam("pageSize") @DefaultValue(DefaultBrapiPaginationValues.PAGE_SIZE) int limit,
-        @ApiParam(value = DocumentationAnnotation.PAGE) @QueryParam("page") @DefaultValue(DefaultBrapiPaginationValues.PAGE) int page,
-        @ApiParam(value = "Search by URI", example = DocumentationAnnotation.EXAMPLE_DOCUMENT_URI) @QueryParam("uri") String uri,
-        @ApiParam(value = "Search by document type", example = DocumentationAnnotation.EXAMPLE_DOCUMENT_TYPE) @QueryParam("documentType") String documentType,
-        @ApiParam(value = "Search by creator", example = DocumentationAnnotation.EXAMPLE_DOCUMENT_CREATOR) @QueryParam("creator") String creator,
-        @ApiParam(value = "Search by language", example = DocumentationAnnotation.EXAMPLE_DOCUMENT_LANGUAGE) @QueryParam("language") String language,
-        @ApiParam(value = "Search by title", example = DocumentationAnnotation.EXAMPLE_DOCUMENT_TITLE) @QueryParam("title") String title,
-        @ApiParam(value = "Search by creation date", example = DocumentationAnnotation.EXAMPLE_DOCUMENT_CREATION_DATE) @QueryParam("creationDate") String creationDate,
-        @ApiParam(value = "Search by extension", example = DocumentationAnnotation.EXAMPLE_DOCUMENT_EXTENSION) @QueryParam("extension") String extension,
-        @ApiParam(value = "Search by concerned item", example = DocumentationAnnotation.EXAMPLE_EXPERIMENT_URI) @QueryParam("concernedItem") String concernedItem,
-        @ApiParam(value = "Search by status", example = DocumentationAnnotation.EXAMPLE_DOCUMENT_STATUS) @QueryParam("status") String status) {
-        
-        //SILEX:conception
-        //Pour l'instant la recherche de documents liés à un élément se fait sur un seul élément. 
-        //Par la suite il faudra la faire sur une liste d'éléments
-        //\SILEX:conception
-        
+            @ApiParam(value = DocumentationAnnotation.PAGE_SIZE) @QueryParam("pageSize") @DefaultValue(DefaultBrapiPaginationValues.PAGE_SIZE) int limit,
+            @ApiParam(value = DocumentationAnnotation.PAGE) @QueryParam("page") @DefaultValue(DefaultBrapiPaginationValues.PAGE) int page,
+            @ApiParam(value = "Search by URI", example = DocumentationAnnotation.EXAMPLE_DOCUMENT_URI) @QueryParam("uri") String uri,
+            @ApiParam(value = "Search by document type", example = DocumentationAnnotation.EXAMPLE_DOCUMENT_TYPE) @QueryParam("documentType") String documentType,
+            @ApiParam(value = "Search by creator", example = DocumentationAnnotation.EXAMPLE_DOCUMENT_CREATOR) @QueryParam("creator") String creator,
+            @ApiParam(value = "Search by language", example = DocumentationAnnotation.EXAMPLE_DOCUMENT_LANGUAGE) @QueryParam("language") String language,
+            @ApiParam(value = "Search by title", example = DocumentationAnnotation.EXAMPLE_DOCUMENT_TITLE) @QueryParam("title") String title,
+            @ApiParam(value = "Search by creation date", example = DocumentationAnnotation.EXAMPLE_DOCUMENT_CREATION_DATE) @QueryParam("creationDate") String creationDate,
+            @ApiParam(value = "Search by extension", example = DocumentationAnnotation.EXAMPLE_DOCUMENT_EXTENSION) @QueryParam("extension") String extension,
+            @ApiParam(value = "Search by concerned item", example = DocumentationAnnotation.EXAMPLE_EXPERIMENT_URI) @QueryParam("concernedItem") String concernedItem,
+            @ApiParam(value = "Search by status", example = DocumentationAnnotation.EXAMPLE_DOCUMENT_STATUS) @QueryParam("status") String status) {
+
         DocumentDaoSesame documentDao = new DocumentDaoSesame();
-        
+
         if (uri != null) {
             documentDao.uri = uri;
         }
@@ -386,86 +396,92 @@ public class DocumentResourceService {
         if (status != null) {
             documentDao.status = status;
         }
-        
+
         documentDao.user = userSession.getUser();
         documentDao.setPage(page);
         documentDao.setPageSize(limit);
-        
+
         return getDocumentsMetadata(documentDao);
     }
-    
+
     /**
-     * 
-     * @param documentURI l'uri du document à télécharger
-     * @return la réponse, avec le document si l'uri existe bien
+     *
+     * @param documentURI document uri to download
+     * @return response with the document if it exists
      */
     @GET
     @Path("{documentURI}")
     @ApiOperation(value = "Get a document (by receiving it's uri)",
-                  notes = "Retrieve the document corresponding to the uri given")
+            notes = "Retrieve the document corresponding to the uri given")
     @ApiResponses(value = {
-        @ApiResponse(code = 200, message = "Retrieve document"),
-        @ApiResponse(code = 400, message = DocumentationAnnotation.BAD_USER_INFORMATION),
-        @ApiResponse(code = 401, message = DocumentationAnnotation.USER_NOT_AUTHORIZED),
+        @ApiResponse(code = 200, message = "Retrieve document")
+        ,
+        @ApiResponse(code = 400, message = DocumentationAnnotation.BAD_USER_INFORMATION)
+        ,
+        @ApiResponse(code = 401, message = DocumentationAnnotation.USER_NOT_AUTHORIZED)
+        ,
         @ApiResponse(code = 500, message = DocumentationAnnotation.ERROR_FETCH_DATA)
     })
     @ApiImplicitParams({
         @ApiImplicitParam(name = "Authorization", required = true,
-                          dataType = "string", paramType = "header",
-                          value = DocumentationAnnotation.ACCES_TOKEN,
-                          example = GlobalWebserviceValues.AUTHENTICATION_SCHEME + " ")
+                dataType = "string", paramType = "header",
+                value = DocumentationAnnotation.ACCES_TOKEN,
+                example = GlobalWebserviceValues.AUTHENTICATION_SCHEME + " ")
     })
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     public Response getDocumentByUri(@ApiParam(value = DocumentationAnnotation.DOCUMENT_URI_DEFINITION, required = true, example = DocumentationAnnotation.EXAMPLE_DOCUMENT_URI) @PathParam("documentURI") String documentURI) {
         //SILEX:conception
-        //Est-ce qu'il serait mieux d'envoyer directement l'InputStream récupéré dans mongoDB plutôt 
-        //que d'écrire le fichier sur le disque avant de l'envoyer ?
+        // it's will be better to send directly this inputstream to mongodb instead of save it
+        // to a directory and after send it
         if (documentURI == null) {
             final Status status = new Status("Access error", StatusCodeMsg.ERR, "Empty document URI");
             return Response.status(Response.Status.BAD_REQUEST).entity(new ResponseFormGET(status)).build();
         }
-        
-        return getFile(documentURI);
         //\SILEX:conception
+        return getFile(documentURI);
+
     }
-    
+
     /**
-     * @action modifie une liste de métadonnées de documents en fonction des informations envoyées 
-     * @param documentsMetadata
-     * @param context
-     * @return Response le resultat de la requête
+     * @action modify document metatada information according to metadata send
+     * @param documentsMetadata document metdata
+     * @param context repository context
+     * @return Response result of the request
      */
     @PUT
     @ApiOperation(value = "Update document metadata")
     @ApiResponses(value = {
-        @ApiResponse(code = 200, message = "Document's metadata updated", response = ResponseFormPOST.class),
-        @ApiResponse(code = 400, message = DocumentationAnnotation.BAD_USER_INFORMATION),
-        @ApiResponse(code = 404, message = "Document not found"),
+        @ApiResponse(code = 200, message = "Document's metadata updated", response = ResponseFormPOST.class)
+        ,
+        @ApiResponse(code = 400, message = DocumentationAnnotation.BAD_USER_INFORMATION)
+        ,
+        @ApiResponse(code = 404, message = "Document not found")
+        ,
         @ApiResponse(code = 500, message = DocumentationAnnotation.ERROR_SEND_DATA)
     })
     @ApiImplicitParams({
         @ApiImplicitParam(name = "Authorization", required = true,
-                          dataType = "string", paramType = "header",
-                          value = DocumentationAnnotation.ACCES_TOKEN,
-                          example = GlobalWebserviceValues.AUTHENTICATION_SCHEME + " ")
+                dataType = "string", paramType = "header",
+                value = DocumentationAnnotation.ACCES_TOKEN,
+                example = GlobalWebserviceValues.AUTHENTICATION_SCHEME + " ")
     })
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response putDocumentMetadata(
-    @ApiParam(value = "Json document metadata") ArrayList<DocumentMetadataDTO> documentsMetadata,
-    @Context HttpServletRequest context) {
+            @ApiParam(value = "Json document metadata") ArrayList<DocumentMetadataDTO> documentsMetadata,
+            @Context HttpServletRequest context) {
         AbstractResultForm postResponse = null;
-        
+
         if (documentsMetadata != null && !documentsMetadata.isEmpty()) {
             DocumentDaoSesame documentDaoSesame = new DocumentDaoSesame();
             if (documentDaoSesame.remoteUserAdress != null) {
                 documentDaoSesame.remoteUserAdress = context.getRemoteAddr();
             }
             documentDaoSesame.user = userSession.getUser();
-            
+
             //Vérification des données et update de la BD
             POSTResultsReturn result = documentDaoSesame.checkAndUpdateList(documentsMetadata);
-            
+
             if (result.getHttpStatus().equals(Response.Status.OK)) { //200 users modifiés
                 postResponse = new ResponseFormPOST(result.statusList);
                 return Response.status(result.getHttpStatus()).entity(postResponse).build();
@@ -480,24 +496,25 @@ public class DocumentResourceService {
             return Response.status(Response.Status.BAD_REQUEST).entity(postResponse).build();
         }
     }
-    
+
     private Response noResultFound(ResponseFormDocumentMetadata getResponse, ArrayList<Status> insertStatusList) {
         insertStatusList.add(new Status("No results", StatusCodeMsg.INFO, "No results for the documents"));
         getResponse.setStatus(insertStatusList);
         return Response.status(Response.Status.NOT_FOUND).entity(getResponse).build();
     }
-    
+
     /**
-     * Collecte les métadonnées de documents issues d'une recherche utilisateur
+     * Get metatada from a user search
+     *
      * @param documentDao DocumentDaoSesame
-     * @return la réponse dédiée à l'utilisateur. 
-     *         Contient la liste des métadonnées de documents correspondant au résultat de la recherche
+     * @return response to the user. Contains metatada list used to get search
+     * results
      */
     private Response getDocumentsMetadata(DocumentDaoSesame documentDao) {
         ArrayList<Document> documentsMetadata;
         ArrayList<Status> statusList = new ArrayList<>();
         ResponseFormDocumentMetadata getResponse;
-        
+
         documentDao.user = userSession.getUser();
         documentsMetadata = documentDao.allPaginate();
         if (documentsMetadata == null) {
@@ -516,22 +533,191 @@ public class DocumentResourceService {
             return noResultFound(getResponse, statusList);
         }
     }
-    
+
     /**
-     * 
-     * @param documentURI l'URI du document à télécharger
-     * @return La réponse, contenant le document à télécharger s'il existe
+     *
+     * @param documentURI document uri to download
+     * @return Response with the document if it exists
      */
     private Response getFile(String documentURI) {
         DocumentDaoMongo documentDaoMongo = new DocumentDaoMongo();
         File file = documentDaoMongo.getDocument(documentURI);
-        
+
         if (file == null) {
             return Response.status(Response.Status.NOT_FOUND).build();
         } else {
             return Response.ok(file, MediaType.APPLICATION_OCTET_STREAM)
-                           .header("Content-Disposition", "attachement; filename=\"" + file.getName() + "\"")
-                           .build();
+                    .header("Content-Disposition", "attachement; filename=\"" + file.getName() + "\"")
+                    .build();
         }
+    }
+
+    /**
+     * Verify searched metadata
+     *
+     * @param headers request headers
+     * @param documentsAnnotations documentsAnnotations represents json body
+     * part
+     * @return
+     */
+    @POST
+    @Path("search")
+    @ApiOperation(value = "Search document", notes = DocumentationAnnotation.USER_ONLY_NOTES)
+    @ApiResponses(value = {
+        @ApiResponse(code = 202, message = "Metadata  retreived", response = DocumentMetadataDTO.class, responseContainer = "List")
+        ,
+        @ApiResponse(code = 400, message = DocumentationAnnotation.BAD_USER_INFORMATION)
+        ,
+        @ApiResponse(code = 401, message = DocumentationAnnotation.USER_NOT_AUTHORIZED)
+        ,
+        @ApiResponse(code = 500, message = DocumentationAnnotation.ERROR_SEND_DATA)})
+    @ApiImplicitParams({
+        @ApiImplicitParam(name = "Authorization", required = true,
+                dataType = "string", paramType = "header",
+                value = DocumentationAnnotation.ACCES_TOKEN,
+                defaultValue = GlobalWebserviceValues.AUTHENTICATION_SCHEME + " ", example = GlobalWebserviceValues.AUTHENTICATION_SCHEME + " ")
+    })
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response postDocumentsMetadataBySearch(@Context HttpHeaders headers,
+            @ApiParam(value = "JSON Document metadata", required = true) DocumentMetadataSearchDTO documentsAnnotations) throws RepositoryException {
+        if (documentsAnnotations != null) {
+            DocumentDaoSesame documentDao = new DocumentDaoSesame();
+
+            if (documentsAnnotations.getUri() != null) {
+                documentDao.uri = documentsAnnotations.getUri();
+            }
+            if (documentsAnnotations.getDocumentType() != null) {
+                documentDao.documentType = documentsAnnotations.getDocumentType();
+            }
+            if (documentsAnnotations.getCreator() != null) {
+                documentDao.creator = documentsAnnotations.getCreator();
+            }
+            if (documentsAnnotations.getLanguage() != null) {
+                documentDao.language = documentsAnnotations.getLanguage();
+            }
+            if (documentsAnnotations.getTitle() != null) {
+                documentDao.title = documentsAnnotations.getTitle();
+            }
+            if (documentsAnnotations.getCreationDate() != null) {
+                documentDao.creationDate = documentsAnnotations.getCreationDate();
+            }
+
+            if (documentsAnnotations.getComment() != null) {
+                documentDao.comment = documentsAnnotations.getComment();
+            }
+
+            if (documentsAnnotations.getExtension() != null) {
+                documentDao.format = documentsAnnotations.getExtension();
+            }
+
+            if (documentsAnnotations.getEndDate() != null) {
+                documentDao.endDate = documentsAnnotations.getEndDate();
+            }
+
+            if (documentsAnnotations.getStartDate() != null) {
+                documentDao.startDate = documentsAnnotations.getStartDate();
+            }
+
+            if (documentsAnnotations.getConcern() != null && !documentsAnnotations.getConcern().isEmpty()) {
+                documentDao.concernedItemsUris = documentsAnnotations.getConcern();
+            }
+
+            if (documentsAnnotations.getConcernedItemType() != null) {
+                documentDao.concernedItemType = documentsAnnotations.getConcernedItemType();
+            }
+
+            if (documentsAnnotations.getAdditionnalProperties() != null) {
+                documentDao.additionnalProperties = documentsAnnotations.getAdditionnalProperties();
+            }
+
+            documentDao.user = userSession.getUser();
+
+            documentDao.setPage(documentsAnnotations.getPage());
+            documentDao.setPageSize(documentsAnnotations.getPageSize());
+
+            return getDocumentsMetadata(documentDao);
+        } else {
+            return Response.status(Response.Status.BAD_REQUEST).entity(new ResponseFormPOST()).build();
+        }
+    }
+
+    @GET
+    @Path("subClassProperties")
+    @ApiOperation(value = "Get a document sub class properties",
+            notes = "Get a document sub class properties ")
+    @ApiResponses(value = {
+        @ApiResponse(code = 200, message = "Retrieve all document sub class properties",
+                response = DocumentProperty.class, responseContainer = "List")
+        ,
+        @ApiResponse(code = 400, message = DocumentationAnnotation.BAD_USER_INFORMATION)
+        ,
+        @ApiResponse(code = 401, message = DocumentationAnnotation.USER_NOT_AUTHORIZED)
+        ,
+        @ApiResponse(code = 500, message = DocumentationAnnotation.ERROR_FETCH_DATA)})
+    @ApiImplicitParams({
+        @ApiImplicitParam(name = "Authorization", required = true,
+                dataType = "string", paramType = "header",
+                value = DocumentationAnnotation.ACCES_TOKEN,
+                defaultValue = GlobalWebserviceValues.AUTHENTICATION_SCHEME + " ", example = GlobalWebserviceValues.AUTHENTICATION_SCHEME + " ")
+    })
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getDocumentSubClassProperties(
+            @ApiParam(value = DocumentationAnnotation.PAGE_SIZE) @QueryParam("pageSize") @DefaultValue(DefaultBrapiPaginationValues.PAGE_SIZE) int limit,
+            @ApiParam(value = DocumentationAnnotation.PAGE) @QueryParam("page") @DefaultValue(DefaultBrapiPaginationValues.PAGE) int page,
+            @ApiParam(value = DocumentationAnnotation.DOCUMENT_URI_CLASS, defaultValue = DocumentationAnnotation.EXAMPLE_DOCUMENT_TYPE) @QueryParam("documentClass") String documentClass
+    ) {
+        DocumentDaoSesame documentsDao = new DocumentDaoSesame();
+        Status errorStatus = null;
+        try {
+            ArrayList<DocumentProperty> documentProperties = documentsDao.getDocumentsProperties(documentClass);
+            if (documentProperties.isEmpty()) {
+                return Response.status(Response.Status.NOT_FOUND).entity(new ResponseFormGET()).build();
+            }
+            return Response.status(Response.Status.OK).entity(new ResponseFormDocumentProperty(limit, page, documentProperties, false)).build();
+        } catch (RepositoryException | MalformedQueryException | QueryEvaluationException ex) {
+            errorStatus = new Status("Error", StatusCodeMsg.ERR, ex.getMessage());
+        }
+        return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(new ResponseFormGET(errorStatus)).build();
+    }
+
+    @GET
+    @Path("subClassProperty")
+    @ApiOperation(value = "Get a document sub class property information",
+            notes = "Get a document class sub property information")
+    @ApiResponses(value = {
+        @ApiResponse(code = 200, message = "Retrieve all information about a specific document class sub property",
+                response = DocumentProperty.class, responseContainer = "List")
+        ,
+        @ApiResponse(code = 400, message = DocumentationAnnotation.BAD_USER_INFORMATION)
+        ,
+        @ApiResponse(code = 401, message = DocumentationAnnotation.USER_NOT_AUTHORIZED)
+        ,
+        @ApiResponse(code = 500, message = DocumentationAnnotation.ERROR_FETCH_DATA)})
+    @ApiImplicitParams({
+        @ApiImplicitParam(name = "Authorization", required = true,
+                dataType = "string", paramType = "header",
+                value = DocumentationAnnotation.ACCES_TOKEN,
+                defaultValue = GlobalWebserviceValues.AUTHENTICATION_SCHEME + " ", example = GlobalWebserviceValues.AUTHENTICATION_SCHEME + " ")
+    })
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getDocumentSubClassProperty(
+            @ApiParam(value = DocumentationAnnotation.PAGE_SIZE) @QueryParam("pageSize") @DefaultValue(DefaultBrapiPaginationValues.PAGE_SIZE) int limit,
+            @ApiParam(value = DocumentationAnnotation.PAGE) @QueryParam("page") @DefaultValue(DefaultBrapiPaginationValues.PAGE) int page,
+            @ApiParam(value = DocumentationAnnotation.DOCUMENT_URI_PROPERTY, defaultValue = DocumentationAnnotation.EXAMPLE_DOCUMENT_PROPERTY) @QueryParam("documentProperty") String documentProperty,
+            @QueryParam("getInstances") Boolean instanceBoolean // if true return instances linked to this property
+    ) {
+        DocumentDaoSesame documentsDao = new DocumentDaoSesame();
+        Status errorStatus = null;
+        try {
+            ArrayList<DocumentProperty> documentProperties = documentsDao.getDocumentsProperty(documentProperty, instanceBoolean);
+            if (documentProperties.isEmpty()) {
+                return Response.status(Response.Status.NOT_FOUND).entity(new ResponseFormGET()).build();
+            }
+            return Response.status(Response.Status.OK).entity(new ResponseFormDocumentProperty(limit, page, documentProperties, false)).build();
+        } catch (RepositoryException | MalformedQueryException | QueryEvaluationException ex) {
+            errorStatus = new Status("Error", StatusCodeMsg.ERR, ex.getMessage());
+        }
+        return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(new ResponseFormGET(errorStatus)).build();
     }
 }
