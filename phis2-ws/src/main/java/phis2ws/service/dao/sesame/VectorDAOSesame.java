@@ -31,10 +31,8 @@ import phis2ws.service.dao.phis.UserDaoPhisBrapi;
 import phis2ws.service.documentation.StatusCodeMsg;
 import phis2ws.service.model.User;
 import phis2ws.service.resources.dto.VectorDTO;
-import phis2ws.service.resources.dto.manager.AbstractVerifiedClass;
 import phis2ws.service.utils.POSTResultsReturn;
 import phis2ws.service.utils.UriGenerator;
-import phis2ws.service.utils.dates.Dates;
 import phis2ws.service.utils.sparql.SPARQLQueryBuilder;
 import phis2ws.service.utils.sparql.SPARQLUpdateBuilder;
 import phis2ws.service.view.brapi.Status;
@@ -77,6 +75,7 @@ public class VectorDAOSesame extends DAOSesame<Vector> {
     //Triplestore relations
     private final static URINamespaces NAMESPACES = new URINamespaces();
     final static String TRIPLESTORE_CONCEPT_VECTOR = NAMESPACES.getObjectsProperty("cVector");
+    final static String TRIPLESTORE_CONCEPT_UAV = NAMESPACES.getObjectsProperty("cUAV");
     final static String TRIPLESTORE_CONTEXT_VECTORS = NAMESPACES.getContextsProperty("vectors");
     
     final static String TRIPLESTORE_RELATION_BRAND = NAMESPACES.getRelationsProperty("rHasBrand");
@@ -308,25 +307,25 @@ public class VectorDAOSesame extends DAOSesame<Vector> {
 
         if (uri != null) {
             vector.setUri(uri);
-        } else {
+        } else if (bindingSet.getValue(URI) != null) {
             vector.setUri(bindingSet.getValue(URI).stringValue());
         }
 
         if (rdfType != null) {
             vector.setRdfType(rdfType);
-        } else {
+        } else if (bindingSet.getValue(RDF_TYPE) != null) {
             vector.setRdfType(bindingSet.getValue(RDF_TYPE).stringValue());
         }
 
         if (label != null) {
             vector.setLabel(label);
-        } else if (bindingSet.getValue(LABEL) != null ){
+        } else if (bindingSet.getValue(LABEL) != null) {
             vector.setLabel(bindingSet.getValue(LABEL).stringValue());
         }
 
         if (brand != null) {
             vector.setBrand(brand);
-        } else {
+        } else if (bindingSet.getValue(BRAND) != null) {
             vector.setBrand(bindingSet.getValue(BRAND).stringValue());
         }
 
@@ -350,7 +349,7 @@ public class VectorDAOSesame extends DAOSesame<Vector> {
         
         if (personInCharge != null) {
             vector.setPersonInCharge(personInCharge);
-        } else {
+        } else if (bindingSet.getValue(PERSON_IN_CHARGE) != null) {
             vector.setPersonInCharge(bindingSet.getValue(PERSON_IN_CHARGE).stringValue());
         }
 
@@ -650,5 +649,48 @@ public class VectorDAOSesame extends DAOSesame<Vector> {
         } else { //errors founded in data
             return checkResult;
         }
+    }
+    
+    /**
+     * Generates the query to get the uri, label and rdf type of all the uav
+     * @example
+     * SELECT DISTINCT  ?uri ?label ?rdfType WHERE {
+     *      ?uri  rdfs:subClassOf*  <http://www.phenome-fppn.fr/vocabulary/2017#UAV> . 
+     *      ?uri rdf:type ?rdfType .
+     *      ?uri  rdfs:label  ?label  .
+     * }
+     * @return the query
+     */
+    private SPARQLQueryBuilder prepareSearchUAVsQuery() {
+        SPARQLQueryBuilder query = new SPARQLQueryBuilder();
+        
+        query.appendSelect("?" + URI + " ?" + RDF_TYPE + " ?" + LABEL );
+        query.appendTriplet("?" + RDF_TYPE, TRIPLESTORE_RELATION_SUBCLASS_OF_MULTIPLE, TRIPLESTORE_CONCEPT_UAV, null);
+        query.appendTriplet("?" + URI, TRIPLESTORE_RELATION_TYPE, "?" + RDF_TYPE, null);
+        query.appendTriplet("?" + URI, TRIPLESTORE_RELATION_LABEL, "?" + LABEL, null);
+        query.appendOrderBy("desc(?" + LABEL + ")");
+        
+        LOGGER.debug(query.toString());
+        
+        return query;
+    }
+    
+    /**
+     * Get the uav (type, label, uri) of the triplestore.
+     * @return The list of the uav
+     */
+    public ArrayList<Vector> getUAVs() {
+        SPARQLQueryBuilder query = prepareSearchUAVsQuery();
+        TupleQuery tupleQuery = getConnection().prepareTupleQuery(QueryLanguage.SPARQL, query.toString());
+        ArrayList<Vector> uavs = new ArrayList<>();
+
+        try (TupleQueryResult result = tupleQuery.evaluate()) {
+            while (result.hasNext()) {
+                BindingSet bindingSet = result.next();
+                Vector uav = getVectorFromBindingSet(bindingSet);
+                uavs.add(uav);
+            }
+        }
+        return uavs;
     }
 }
