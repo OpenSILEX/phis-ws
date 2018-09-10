@@ -119,7 +119,7 @@ public class InfrastructureDAOSesame extends DAOSesame<Infrastructure> {
     }
     
     /**
-     * return prepared count query based on the current search query
+     * Return prepared count query based on the current search query
      * SELECT (COUNT(DISTINCT ?uri) as ?count)
      * WHERE {
      *   ?uri  ?0  ?rdfType  . 
@@ -142,7 +142,7 @@ public class InfrastructureDAOSesame extends DAOSesame<Infrastructure> {
     }
 
     /**
-     * search all the infrastructures corresponding to the search params given by the user
+     * Search all the infrastructures corresponding to the search params given by the user
      * @return list of infrastructures which match given search params.
      */
     public ArrayList<Infrastructure> allPaginate() {
@@ -162,7 +162,7 @@ public class InfrastructureDAOSesame extends DAOSesame<Infrastructure> {
 
     
     /**
-     * get an infrastructure from a given binding set.
+     * Get an infrastructure from a given binding set.
      * Assume that the following attributes exist :
      * uri, rdfType, label
      * @param bindingSet a bindingSet from a search query

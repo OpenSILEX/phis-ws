@@ -57,7 +57,7 @@ public class InfrastructureResourceService {
     Session userSession;
     
     /**
-     * search infrastructures by uri, rdfType. 
+     * Search infrastructures by uri, rdfType. 
      * 
      * @param pageSize
      * @param page
@@ -171,7 +171,7 @@ public class InfrastructureResourceService {
     }
     
     /**
-     * search infrastructure details for a given uri
+     * Search infrastructure details for a given uri
      * 
      * @param pageSize
      * @param page
