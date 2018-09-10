@@ -2,8 +2,8 @@
 //                                       PropertyDAOSesame.java
 // SILEX-PHIS
 // Copyright © INRA 2018
-// Creation date: 7 sept. 2018
-// Contact: vincent.migot@inra.fr anne.tireau@inra.fr, pascal.neveu@inra.fr
+// Creation date: 29 may 2018
+// Contact: morgane.vidal@inra.fr vincent.migot@inra.fr anne.tireau@inra.fr, pascal.neveu@inra.fr
 // Subject: access and manipulation of the properties of the ontology in the triplestore
 //******************************************************************************
 package phis2ws.service.dao.sesame;
