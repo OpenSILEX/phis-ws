@@ -1,12 +1,9 @@
 //******************************************************************************
 //                                       PropertyDAOSesame.java
-//
-// Author(s): Morgane Vidal <morgane.vidal@inra.fr>
-// PHIS-SILEX version 1.0
-// Copyright © - INRA - 2018
-// Creation date: 29 mai 2018
-// Contact: morgane.vidal@inra.fr, anne.tireau@inra.fr, pascal.neveu@inra.fr
-// Last modification date:  29 mai 2018
+// SILEX-PHIS
+// Copyright © INRA 2018
+// Creation date: 7 sept. 2018
+// Contact: vincent.migot@inra.fr anne.tireau@inra.fr, pascal.neveu@inra.fr
 // Subject: access and manipulation of the properties of the ontology in the triplestore
 //******************************************************************************
 package phis2ws.service.dao.sesame;
@@ -70,6 +67,8 @@ public class PropertyDAOSesame extends DAOSesame<Property> {
     private final String BLANCK_NODE = "_:x";
     //a property, used to query the triplestore
     private final String PROPERTY = "property";
+    //a property type, used to query the triplestore
+    private final String PROPERTY_TYPE = "propertyType";    
     //a count result, used to query the triplestore (count properties)
     private final String COUNT = "count";
     //the rdf type, used to query the triplestore (cardinalities)
@@ -101,11 +100,12 @@ public class PropertyDAOSesame extends DAOSesame<Property> {
      * a subclass of the given type.
      * @return the builded query
      * eg.
-     * SELECT DISTINCT  ?relation ?property 
+     * SELECT DISTINCT ?propType ?relation ?property 
      * WHERE {
-     *   <http://www.phenome-fppn.fr/diaphen>  ?relation  ?property  . 
-     *   <http://www.phenome-fppn.fr/diaphen>  rdf:type  ?rdfType  . 
-     *   ?rdfType  rdfs:subClassOf*  <http://www.phenome-fppn.fr/vocabulary/2017#Infrastructure> . 
+     *   <http://www.phenome-fppn.fr/diaphen> ?relation  ?property  . 
+     *   <http://www.phenome-fppn.fr/diaphen> rdf:type  ?rdfType  . 
+     *   ?property rdf:type ?propType .
+     *   ?rdfType  rdfs:subClassOf* <http://www.phenome-fppn.fr/vocabulary/2017#Infrastructure> . 
      * }
      */
     @Override
@@ -113,8 +113,9 @@ public class PropertyDAOSesame extends DAOSesame<Property> {
         SPARQLQueryBuilder query = new SPARQLQueryBuilder();
         query.appendDistinct(Boolean.TRUE);
 
-        query.appendSelect("?" + RELATION + " ?" + PROPERTY);
+        query.appendSelect("?" + RELATION + " ?" + PROPERTY + " ?" + PROPERTY_TYPE);
         query.appendTriplet("<" + uri + ">", "?" + RELATION, "?" + PROPERTY, null);
+        query.appendTriplet("?" + PROPERTY, TRIPLESTORE_RELATION_TYPE, " ?" + PROPERTY_TYPE, null);
         query.appendTriplet("<" + uri + ">", TRIPLESTORE_RELATION_TYPE, "?" + RDF_TYPE, null);
         
         if (subClassOf != null) {
@@ -130,7 +131,7 @@ public class PropertyDAOSesame extends DAOSesame<Property> {
      * search all the properties corresponding to the given object uri
      * @return the list of the properties which match the given uri.
      */
-    public ArrayList<PropertiesDTO> allPaginate() {        
+    public ArrayList<PropertiesDTO> getAllProperties() {        
         SPARQLQueryBuilder query = prepareSearchQuery();
         TupleQuery tupleQuery = getConnection().prepareTupleQuery(QueryLanguage.SPARQL, query.toString());
         ArrayList<PropertiesDTO> propertiesContainer = new ArrayList<>();
@@ -144,6 +145,7 @@ public class PropertyDAOSesame extends DAOSesame<Property> {
                 BindingSet bindingSet = result.next();
                 PropertyDTO property = new PropertyDTO();
         
+                property.setRdfType(bindingSet.getValue(PROPERTY_TYPE).stringValue());
                 property.setRelation(bindingSet.getValue(RELATION).stringValue());
                 property.setValue(bindingSet.getValue(PROPERTY).stringValue());
         

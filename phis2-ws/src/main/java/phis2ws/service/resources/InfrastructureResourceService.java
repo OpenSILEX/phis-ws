@@ -220,7 +220,7 @@ public class InfrastructureResourceService {
     @ApiOperation(value = "Get all infrastructure's details corresponding to the search uri",
                   notes = "Retrieve all infrastructure's details authorized for the user corresponding to the searched uri")
     @ApiResponses(value = {
-        @ApiResponse(code = 200, message = "Retrieve infrastructure's details", response = Infrastructure.class, responseContainer = "List"),
+        @ApiResponse(code = 200, message = "Retrieve infrastructure's details", response = PropertiesDTO.class, responseContainer = "List"),
         @ApiResponse(code = 400, message = DocumentationAnnotation.BAD_USER_INFORMATION),
         @ApiResponse(code = 401, message = DocumentationAnnotation.USER_NOT_AUTHORIZED),
         @ApiResponse(code = 500, message = DocumentationAnnotation.ERROR_FETCH_DATA)
@@ -251,7 +251,7 @@ public class InfrastructureResourceService {
         ResponseFormProperties getResponse;
 
         // Retreive all annotations returned by the query
-        ArrayList<PropertiesDTO> infrastructureDetails = propertiesDAO.allPaginate();
+        ArrayList<PropertiesDTO> infrastructureDetails = propertiesDAO.getAllProperties();
 
         if (infrastructureDetails == null) {
             getResponse = new ResponseFormProperties(0, 0, infrastructureDetails, true, 0);
