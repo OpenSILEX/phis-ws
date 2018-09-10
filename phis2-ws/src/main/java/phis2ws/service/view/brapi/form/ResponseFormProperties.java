@@ -1,13 +1,13 @@
 //******************************************************************************
-//                                       ResponseFormSensorProfile.java
+//                                       ResponseFormProperties.java
 //
-// Author(s): Morgane Vidal <morgane.vidal@inra.fr>
+// Author(s): Vincent Migot <vincent.migot@inra.fr>
 // PHIS-SILEX version 1.0
 // Copyright © - INRA - 2018
-// Creation date: 30 juil. 2018
-// Contact: morgane.vidal@inra.fr, anne.tireau@inra.fr, pascal.neveu@inra.fr
-// Last modification date:  30 juil. 2018
-// Subject: Allows the formating of the result of the request about Sensor Profile
+// Creation date: 10 septembre 2018
+// Contact: vincent.migot@inra.fr, anne.tireau@inra.fr, pascal.neveu@inra.fr
+// Last modification date:  10 septembre 2018
+// Subject: Allows the formating of the result of the request about a generic list of properties
 //******************************************************************************
 package phis2ws.service.view.brapi.form;
 
@@ -18,8 +18,8 @@ import phis2ws.service.view.brapi.results.ResultProperties;
 import phis2ws.service.view.manager.ResultForm;
 
 /**
- * Allows the formating of the result of the request about Sensor Profile
- * @author Morgane Vidal <morgane.vidal@inra.fr>
+ * Allows the formating of the result of the request about a generic list of properties
+ * @author Vincent Migot <vincent.migot@inra.fr>
  */
 public class ResponseFormProperties extends ResultForm<PropertiesDTO> {
     /**
