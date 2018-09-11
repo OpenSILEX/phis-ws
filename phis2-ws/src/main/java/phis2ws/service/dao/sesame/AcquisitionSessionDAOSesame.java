@@ -31,7 +31,8 @@ import phis2ws.service.view.model.phis.Vector;
 /**
  * This class is a Data Access Object for the acquisition sessions.
  * It gets the metadata for the excel file used to define acquisition sessions.
- * @author Morgane Vidal <morgane.vidal@inra.fr>
+ * @update [Arnaud Charleroy] 10 September, 2018 : minor fix on vector data gathering
+ * @author Morgane Vidal <morgane.vidal@inra.fr>, Arnaud Charleroy <arnaud.charleroy@inra.fr>
  */
 public class AcquisitionSessionDAOSesame extends DAOSesame<Object> {
     
@@ -164,8 +165,8 @@ public class AcquisitionSessionDAOSesame extends DAOSesame<Object> {
                 
                 if (vectors.size() > i) {
                     fileMetadata.setVectorUri(vectors.get(i).getUri());
-                    fileMetadata.setVectorAlias(sensors.get(i).getLabel());
-                    fileMetadata.setVectorType(sensors.get(i).getRdfType());
+                    fileMetadata.setVectorAlias(vectors.get(i).getLabel());
+                    fileMetadata.setVectorType(vectors.get(i).getRdfType());
                 }
                 
                 if (radiometricTargets.size() > i) {
