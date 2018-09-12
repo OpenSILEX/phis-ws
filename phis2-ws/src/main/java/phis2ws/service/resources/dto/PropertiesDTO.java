@@ -1,12 +1,9 @@
 //******************************************************************************
 //                                       PropertiesDTO.java
-//
-// Author(s): Vincent Migot <vincent.migot@inra.fr>
-// PHIS-SILEX version 1.0
-// Copyright © - INRA - 2018
-// Creation date: 10 septembre 2018
-// Contact: vincent.migot@inra.fr, anne.tireau@inra.fr, pascal.neveu@inra.fr
-// Last modification date:  10 septembre 2018
+// SILEX-PHIS
+// Copyright © INRA 2018
+// Creation date: 7 sept. 2018
+// Contact: vincent.migot@inra.fr anne.tireau@inra.fr, pascal.neveu@inra.fr
 // Subject: Represents the JSON for an object protperties with its uri
 //******************************************************************************
 package phis2ws.service.resources.dto;
