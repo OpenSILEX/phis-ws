@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import org.slf4j.Logger;
@@ -61,7 +61,7 @@ public class StudyDetailsResourceService implements BrapiCall{
         callMethods.add("GET");
         ArrayList<String> callVersions = new ArrayList<>();
         callVersions.add("1.2");
-        Call callscall = new Call("studies", calldatatypes, callMethods, callVersions);
+        Call callscall = new Call("studies/{studyDbId}", calldatatypes, callMethods, callVersions);
         return callscall;
     }
     
@@ -88,7 +88,7 @@ public class StudyDetailsResourceService implements BrapiCall{
     @Produces(MediaType.APPLICATION_JSON)   
     
     public Response getStudyDetails (
-        @ApiParam(value = "Search by studyDbId", required = true, example = DocumentationAnnotation.EXAMPLE_EXPERIMENT_URI ) @QueryParam("studyDbId") @URL @Required String studyDbId
+        @ApiParam(value = "Search by studyDbId", required = true, example = DocumentationAnnotation.EXAMPLE_EXPERIMENT_URI ) @PathParam("studyDbId") @URL @Required String studyDbId
         ) throws SQLException {               
         
         StudyDAO studyDAO = new StudyDAO();
