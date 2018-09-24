@@ -365,6 +365,7 @@ public class DocumentDaoSesame extends DAOSesame<Document> {
         if (language != null) {
             sparqlQuery.appendTriplet(select, DublinCore.RELATION_LANGUAGE.toString(), "\"" + language + "\"", null);
         } else {
+            sparqlQuery.appendGroupBy("?" + LANGUAGE);
             sparqlQuery.appendSelect(" ?" + LANGUAGE);
             sparqlQuery.appendTriplet(select, DublinCore.RELATION_LANGUAGE.toString(), "?" + LANGUAGE, null);
         }
