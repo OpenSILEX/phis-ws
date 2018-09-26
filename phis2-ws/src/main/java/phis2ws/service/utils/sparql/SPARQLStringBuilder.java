@@ -9,6 +9,7 @@ package phis2ws.service.utils.sparql;
 
 import java.util.Iterator;
 import java.util.List;
+import phis2ws.service.resources.validation.validators.URLValidator;
 
 /**
  * Abstract class which provides common methods and attributes 
@@ -324,6 +325,6 @@ public abstract class SPARQLStringBuilder {
     }
     
     private boolean isLink(String link) {
-        return link.startsWith("http://") || link.startsWith("https://");
+        return URLValidator.validateURL(link);
     }
 }
