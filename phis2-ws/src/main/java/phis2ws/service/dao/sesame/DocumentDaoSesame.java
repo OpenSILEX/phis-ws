@@ -365,6 +365,7 @@ public class DocumentDaoSesame extends DAOSesame<Document> {
         } else {
             sparqlQuery.appendGroupBy("?" + LANGUAGE);
             sparqlQuery.appendSelect(" ?" + LANGUAGE);
+            sparqlQuery.appendGroupBy(" ?" + LANGUAGE);
             sparqlQuery.appendTriplet(select, DublinCore.RELATION_LANGUAGE.toString(), "?" + LANGUAGE, null);
         }
         
@@ -415,6 +416,8 @@ public class DocumentDaoSesame extends DAOSesame<Document> {
         if (comment != null) {
             sparqlQuery.appendFilter("regex(STR(?" + COMMENT +"), '" + comment + "', 'i')");
         }
+        
+        LOGGER.debug(SPARQL_SELECT_QUERY + sparqlQuery.toString());
         
        return sparqlQuery;
     }
