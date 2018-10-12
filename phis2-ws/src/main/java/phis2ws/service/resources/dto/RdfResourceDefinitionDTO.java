@@ -1,5 +1,5 @@
 //******************************************************************************
-//                                       PropertiesDTO.java
+//                                       RdfResourceDefinitionDTO.java
 // SILEX-PHIS
 // Copyright © INRA 2018
 // Creation date: 7 sept. 2018
@@ -25,19 +25,21 @@ import phis2ws.service.view.model.phis.Properties;
  * @see PropertyDTO
  * @author Vincent Migot <vincent.migot@inra.fr>
  */
-public class PropertiesDTO<T extends PropertyDTO> extends AbstractVerifiedClass {
+public class RdfResourceDefinitionDTO extends AbstractVerifiedClass {
 
     //uri of the object concerned by the properties
     private String uri;
+    //label of the object concerned by the properties
+    private String label;    
     //list of the properties of the object
-    private ArrayList<T> properties = new ArrayList<>();
+    private ArrayList<PropertyDTO> properties = new ArrayList<>();
 
     @Override
     public Properties createObjectFromDTO() {
         Properties newProperties = new Properties();
         newProperties.setUri(uri);
 
-        for (T property : getProperties()) {
+        for (PropertyDTO property : getProperties()) {
             newProperties.addProperty(property.createObjectFromDTO());
         }
 
@@ -54,23 +56,33 @@ public class PropertiesDTO<T extends PropertyDTO> extends AbstractVerifiedClass 
     public void setUri(String uri) {
         this.uri = uri;
     }
+    
+    @Required
+    @ApiModelProperty(example = DocumentationAnnotation.EXAMPLE_VECTOR_LABEL)
+    public String getLabel() {
+        return label;
+    }
+
+    public void setLabel(String label) {
+        this.label = label;
+    }
 
     @NotEmpty
     @NotNull
     @Valid
-    public ArrayList<T> getProperties() {
+    public ArrayList<PropertyDTO> getProperties() {
         return properties;
     }
    
-    public void addProperty(T property) {
+    public void addProperty(PropertyDTO property) {
         properties.add(property);
     }
     
-    public boolean hasProperty(T property) {
+    public boolean hasProperty(PropertyDTO property) {
         return properties.contains(property);
     }
     
-    public T getProperty(T property) {
+    public PropertyDTO getProperty(PropertyDTO property) {
         int index = properties.indexOf(property);
         
         if (index >= 0) {
