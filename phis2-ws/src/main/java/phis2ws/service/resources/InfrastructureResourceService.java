@@ -31,13 +31,12 @@ import phis2ws.service.authentication.Session;
 import phis2ws.service.configuration.DefaultBrapiPaginationValues;
 import phis2ws.service.configuration.GlobalWebserviceValues;
 import phis2ws.service.dao.sesame.InfrastructureDAOSesame;
-import phis2ws.service.dao.sesame.PropertyLabelDAOSesame;
+import phis2ws.service.dao.sesame.PropertyDAOSesame;
 import phis2ws.service.documentation.DocumentationAnnotation;
 import phis2ws.service.documentation.StatusCodeMsg;
 import phis2ws.service.injection.SessionInject;
 import phis2ws.service.ontologies.Vocabulary;
-import phis2ws.service.resources.dto.PropertiesDTO;
-import phis2ws.service.resources.dto.PropertyLabelsDTO;
+import phis2ws.service.resources.dto.RdfResourceDefinitionDTO;
 import phis2ws.service.resources.validation.interfaces.Required;
 import phis2ws.service.resources.validation.interfaces.URL;
 import phis2ws.service.view.brapi.Status;
@@ -177,6 +176,7 @@ public class InfrastructureResourceService {
      * Search infrastructure details for a given uri
      * 
      * @param pageSize
+     * @param language
      * @param page
      * @param uri
      * @return list of the infrastructure's detail corresponding to the search uri
@@ -223,7 +223,7 @@ public class InfrastructureResourceService {
     @ApiOperation(value = "Get all infrastructure's details corresponding to the search uri",
                   notes = "Retrieve all infrastructure's details authorized for the user corresponding to the searched uri")
     @ApiResponses(value = {
-        @ApiResponse(code = 200, message = "Retrieve infrastructure's details", response = PropertiesDTO.class, responseContainer = "List"),
+        @ApiResponse(code = 200, message = "Retrieve infrastructure's details", response = RdfResourceDefinitionDTO.class, responseContainer = "List"),
         @ApiResponse(code = 400, message = DocumentationAnnotation.BAD_USER_INFORMATION),
         @ApiResponse(code = 401, message = DocumentationAnnotation.USER_NOT_AUTHORIZED),
         @ApiResponse(code = 500, message = DocumentationAnnotation.ERROR_FETCH_DATA)
@@ -240,12 +240,13 @@ public class InfrastructureResourceService {
         @ApiParam(value = "Language", example = DocumentationAnnotation.EXAMPLE_LANGUAGE) @QueryParam("language") String language,
         @ApiParam(value = DocumentationAnnotation.PAGE_SIZE) @QueryParam(GlobalWebserviceValues.PAGE_SIZE) @DefaultValue(DefaultBrapiPaginationValues.PAGE_SIZE) @Min(0) int pageSize,
         @ApiParam(value = DocumentationAnnotation.PAGE) @QueryParam(GlobalWebserviceValues.PAGE) @DefaultValue(DefaultBrapiPaginationValues.PAGE) @Min(0) int page) {            
-        PropertyLabelDAOSesame propertiesDAO = new PropertyLabelDAOSesame();
+        PropertyDAOSesame propertiesDAO = new PropertyDAOSesame();
         
         propertiesDAO.uri = uri;
         propertiesDAO.subClassOf = Vocabulary.CONCEPT_INFRASTRUCTURE;
-        if (language != null) {
-            propertiesDAO.language = language;
+        
+        if (language == null) {
+            language = "en";
         }
                 
         propertiesDAO.user = userSession.getUser();
@@ -256,7 +257,7 @@ public class InfrastructureResourceService {
         ResponseFormProperties getResponse;
 
         // Retreive all annotations returned by the query
-        ArrayList<PropertiesDTO<PropertyLabelsDTO>> infrastructureDetails = propertiesDAO.getAllProperties();
+        ArrayList<RdfResourceDefinitionDTO> infrastructureDetails = propertiesDAO.getAllPropertiesWithLabels(language);
 
         if (infrastructureDetails == null) {
             getResponse = new ResponseFormProperties(0, 0, infrastructureDetails, true, 0);
