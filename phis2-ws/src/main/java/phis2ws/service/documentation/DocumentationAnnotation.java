@@ -56,6 +56,8 @@ public final class DocumentationAnnotation {
             + "<b>The token also include the response object header. </b>"
             + "For more information, the <b>Response object definition</b> is available at <b><a href=\"http://docs.brapi.apiary.io/#introduction/structure-of-the-response-object:\">Brapi response object</a></b>.";
 
+    public static final String ENVIRONMENT_POST_DEFINITION = "JSON format to insert environment";
+    
     public static final String EXPERIMENT_URI_DEFINITION = "An experiment URI (Unique Resource Identifier)";
     public static final String EXPERIMENT_POST_DATA_DEFINITION = "JSON format of experiment data";
 
@@ -133,6 +135,8 @@ public final class DocumentationAnnotation {
     public static final String EXAMPLE_EXPERIMENT_ALIAS = "alias";
     public static final String EXAMPLE_EXPERIMENT_KEYWORDS = "keywords";
     public static final String EXAMPLE_EXPERIMENT_CAMPAIGN = "2012";
+    
+    public static final String EXAMPLE_ENVIRONMENT_VALUE = "1.3";
 
     public static final String EXAMPLE_FILE_INFORMATION_CHECKSUM = "106fa487baa1728083747de1c6df73e9";
     public static final String EXAMPLE_FILE_INFORMATION_EXTENSION = "jpg";
