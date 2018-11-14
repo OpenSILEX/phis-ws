@@ -50,3 +50,5 @@ logs/*
 
 #target
 phis2-ws/target/
+
+phis2-ws/src/main/profiles/dev/config\.properties
