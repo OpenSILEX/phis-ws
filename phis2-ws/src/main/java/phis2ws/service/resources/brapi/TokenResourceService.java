@@ -11,6 +11,7 @@
 //***********************************************************************************************
 package phis2ws.service.resources.brapi;
 
+import at.favre.lib.crypto.bcrypt.BCrypt;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSVerifier;
 import com.nimbusds.jose.crypto.RSASSAVerifier;
@@ -198,6 +199,7 @@ public class TokenResourceService implements BrapiCall{
             // cas unsername /password
             password = jsonToken.getPassword();
         }
+        
         if ((password != null && username != null) || (isJWT && validJWTToken && username != null)) {
             // Is user authorized ?
             User user = new User(username, password);
@@ -207,6 +209,7 @@ public class TokenResourceService implements BrapiCall{
                 // user is already logged
                 // we trust the client
                 //\SILEX:info
+
                 if (isJWT && validJWTToken) {
                     user = checkAuthentification(user, false);
                 } else {
@@ -336,25 +339,28 @@ public class TokenResourceService implements BrapiCall{
      * @return User|null an instance of user or null
      */
     private User checkAuthentification(User user, boolean verifPassword) {
+        
+
         UserDaoPhisBrapi uspb = new UserDaoPhisBrapi();
         // choose the database with payload information
         if (this.jwtClaimsSet != null) {
             uspb.setDataSourceFromJwtClaimsSet(this.jwtClaimsSet);
         }
-
         final String password = user.getPassword();
-
         try {
+            
             if (uspb.existInDB(user)) {
                 // Fixes #12 issue fill user name instead of just 
                 // fill password user.setPassword(uspb.getPasswordFromDb(user.getEmail()));
                 uspb.find(user);
-//              
             } else {
-                user = null;
+                return null;
             }
-            if (verifPassword && user != null) {
-                if (password.equals(user.getPassword())) {
+            if (verifPassword) {
+                // Bcrypt verify requires more than just equality check.
+                BCrypt.Result result = BCrypt.verifyer().verify(password.toCharArray(), user.getPassword());
+
+                if (result.verified == true) {
                     uspb.admin = uspb.isAdmin(user);
                 } else {
                     user = null;

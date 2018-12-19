@@ -248,6 +248,12 @@
             <groupId>javax.xml.bind</groupId>
             <artifactId>jaxb-api</artifactId>
             <version>2.3.1</version>
+        </dependency>
+        <!-- bcrypt, (maybe change to different lib at some point?)-->
+        <dependency>
+            <groupId>at.favre.lib</groupId>
+            <artifactId>bcrypt</artifactId>
+            <version>0.6.0</version>
         </dependency>        
     </dependencies>
 
