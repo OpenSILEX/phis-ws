@@ -279,15 +279,19 @@ public class ScientificObjectDAOSesame extends DAOSesame<ScientificObject> {
             //2. Register in triplestore
             UpdateBuilder spql = new UpdateBuilder();
             
+            Resource scientificObjectUri = ResourceFactory.createResource(scientificObject.getUri());
+            Node scientificObjectType = NodeFactory.createURI(scientificObject.getRdfType());
+            
             Node graph = null;
             if (scientificObject.getUriExperiment() != null) {
-                graph = NodeFactory.createURI(scientificObject.getUriExperiment() );
+                graph = NodeFactory.createURI(scientificObject.getUriExperiment());
+                
+                //Add participates in (scientific object participates in experiment)
+                Node participatesIn = NodeFactory.createURI(Vocabulary.RELATION_PARTICIPATES_IN.toString());
+                spql.addInsert(graph, scientificObjectUri, participatesIn, graph);
             } else {
                 graph = NodeFactory.createURI(Contexts.SCIENTIFIC_OBJECTS.toString());
             }
-            
-            Resource scientificObjectUri = ResourceFactory.createResource(scientificObject.getUri());
-            Node scientificObjectType = NodeFactory.createURI(scientificObject.getRdfType());
             
             spql.addInsert(graph, scientificObjectUri, RDF.type, scientificObjectType);
             
