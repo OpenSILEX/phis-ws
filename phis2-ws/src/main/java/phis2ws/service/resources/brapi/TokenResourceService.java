@@ -362,19 +362,15 @@ public class TokenResourceService implements BrapiCall{
                 BCrypt.Result result = BCrypt.verifyer().verify(password.toCharArray(), user.getPassword());
 
                 if (result.verified == true) {
-
                     uspb.admin = uspb.isAdmin(user);
-
                 } else {
                     // MD5 hash fallback
                     if (password.equals(user.getPassword())) {
                         uspb.admin = uspb.isAdmin(user);
                     }
                     else 
-                    {
-                    
+                    {             
                         user = null;
-                    
                     }
                 
                 }
