@@ -412,7 +412,7 @@ public class AnnotationDAOSesame extends DAOSesame<Annotation> {
             String annotationUri = null;
             if (searchUri != null) {
                 if(uriDao.existUri(searchUri)){
-                    annotationUri = searchUri;
+                    annotation.setUri(searchUri);
                 }
             } else {
                 if(bindingSet.getValue(URI) != null){

@@ -85,7 +85,7 @@ public class EventDAOSesame extends DAOSesame<Event> {
     private String prepareSearchQueryUri(SPARQLQueryBuilder query, String searchUri, boolean inGroupBy) {
         query.appendSelect(URI_SELECT_NAME_SPARQL);
         
-        if(inGroupBy){
+        if (inGroupBy) {
             query.appendGroupBy(URI_SELECT_NAME_SPARQL);
         }
         if (searchUri != null) {
@@ -143,7 +143,7 @@ public class EventDAOSesame extends DAOSesame<Event> {
     private void prepareSearchQueryDateTime(SPARQLQueryBuilder query, String uriSelectNameSparql, String searchDateTimeRangeStartString, String searchDateTimeRangeEndString, boolean inGroupBy) {  
         
         query.appendSelect(DATETIMESTAMP_SELECT_NAME_SPARQL);
-        if(inGroupBy){
+        if (inGroupBy) {
             query.appendGroupBy(DATETIMESTAMP_SELECT_NAME_SPARQL);
         }
         query.appendTriplet(uriSelectNameSparql, Time.hasTime.toString(), TIME_SELECT_NAME_SPARQL, null);
