@@ -52,3 +52,5 @@ logs/*
 phis2-ws/target/
 
 phis2-ws/src/main/profiles/dev/config\.properties
+
+phis2-ws/nb-configuration\.xml
