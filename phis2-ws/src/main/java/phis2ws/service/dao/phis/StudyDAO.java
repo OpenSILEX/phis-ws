@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import opensilex.service.dao.exception.DAODataErrorAggregateException;
+import opensilex.service.dao.exception.DAOPersistenceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import phis2ws.service.dao.manager.DAO;
@@ -33,7 +34,7 @@ import phis2ws.service.model.User;
 import phis2ws.service.utils.sql.JoinAttributes;
 import phis2ws.service.view.model.phis.Experiment;
 import phis2ws.service.view.model.phis.ContactBrapi;
-import phis2ws.service.dao.phis.ExperimentDao;
+import phis2ws.service.dao.phis.ExperimentSQLDAO;
 import phis2ws.service.view.model.phis.StudyDetails;
 
 /**
@@ -98,7 +99,7 @@ public class StudyDAO extends DAO<StudyDetails>{
      * @return expList list of Experiment
      */
     public ArrayList<Experiment> getExperimentsList() {
-        ExperimentDao experimentDAO = new ExperimentDao();
+        ExperimentSQLDAO experimentDAO = new ExperimentSQLDAO();
         ArrayList<Experiment> expList = new ArrayList();
         
         try (final Connection connection = experimentDAO.getDataSource().getConnection();
@@ -114,7 +115,7 @@ public class StudyDAO extends DAO<StudyDetails>{
             //\SILEX:info
             
             try (final ResultSet queryResult = statement.executeQuery(query.toString())) {
-                UserDaoPhisBrapi userDao = new UserDaoPhisBrapi();
+                UserDAO userDao = new UserDAO();
                 userDao.isAdmin(user);
                 boolean isAdmin = (user.getAdmin().equals("t") || user.getAdmin().equals("true"));
 
@@ -151,7 +152,7 @@ public class StudyDAO extends DAO<StudyDetails>{
     }
 
     public Integer count(){
-        ExperimentDao experimentDAO = new ExperimentDao();
+        ExperimentSQLDAO experimentDAO = new ExperimentSQLDAO();
         experimentDAO.uri = studyDbId;
         return experimentDAO.count();
     }    
@@ -190,7 +191,7 @@ public class StudyDAO extends DAO<StudyDetails>{
     * @return study 
     */
     private StudyDetails getStudyContacts(StudyDetails study) throws SQLException {
-        ExperimentDao experimentDAO = new ExperimentDao();      
+        ExperimentSQLDAO experimentDAO = new ExperimentSQLDAO();      
 
         try (final Connection connection = experimentDAO.getDataSource().getConnection();
                 final Statement statement = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY, ResultSet.HOLD_CURSORS_OVER_COMMIT);
@@ -222,7 +223,7 @@ public class StudyDAO extends DAO<StudyDetails>{
     * @return study 
     */
     private StudyDetails getStudyActive(StudyDetails study) throws SQLException {
-        ExperimentDao experimentDAO = new ExperimentDao();
+        ExperimentSQLDAO experimentDAO = new ExperimentSQLDAO();
         
             try (final Connection connection = experimentDAO.getDataSource().getConnection();
             final Statement statement = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY, ResultSet.HOLD_CURSORS_OVER_COMMIT);
@@ -248,32 +249,32 @@ public class StudyDAO extends DAO<StudyDetails>{
     }
 
     @Override
-    public List<StudyDetails> create(List<StudyDetails> objects) throws Exception {
+    public List<StudyDetails> create(List<StudyDetails> objects) throws DAOPersistenceException, Exception {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    public void delete(List<StudyDetails> objects) throws Exception {
+    public void delete(List<StudyDetails> objects) throws DAOPersistenceException, Exception {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    public List<StudyDetails> update(List<StudyDetails> objects) throws Exception {
+    public List<StudyDetails> update(List<StudyDetails> objects) throws DAOPersistenceException, Exception {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    public StudyDetails find(StudyDetails object) throws Exception {
+    public StudyDetails find(StudyDetails object) throws DAOPersistenceException, Exception {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    public StudyDetails findById(String id) throws Exception {
+    public StudyDetails findById(String id) throws DAOPersistenceException, Exception {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    public void validate(List<StudyDetails> objects) throws DAODataErrorAggregateException {
+    public void validate(List<StudyDetails> objects) throws DAOPersistenceException, DAODataErrorAggregateException {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
