@@ -523,7 +523,7 @@ public class EventDAO extends Rdf4jDAO<Event> {
     private void setEventProperties(Event event) throws DAOPersistenceException {
         PropertyDAO propertyDAO = new PropertyDAO();
         propertyDAO.getAllPropertiesWithLabelsExceptThoseSpecified(
-            event, null, new ArrayList() {
+            event, null, null, new ArrayList() {
                 {
                     add(Rdf.RELATION_TYPE.toString());
                     add(Time.hasTime.getURI());

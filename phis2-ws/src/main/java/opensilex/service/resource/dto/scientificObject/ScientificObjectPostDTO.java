@@ -16,7 +16,7 @@ import opensilex.service.configuration.DateFormats;
 import opensilex.service.resource.validation.interfaces.Required;
 import opensilex.service.resource.dto.manager.AbstractVerifiedClass;
 import opensilex.service.resource.dto.rdfResourceDefinition.PropertyPostDTO;
-import opensilex.service.model.ScientificObject;
+import opensilex.service.model.ScientificObjectByContext;
 import opensilex.service.resource.validation.interfaces.URL;
 
 /**
@@ -62,8 +62,8 @@ public class ScientificObjectPostDTO extends AbstractVerifiedClass {
     private ArrayList<PropertyPostDTO> properties;
 
     @Override
-    public ScientificObject createObjectFromDTO() {
-        ScientificObject scientificObject = new ScientificObject();
+    public ScientificObjectByContext createObjectFromDTO() {
+        ScientificObjectByContext scientificObject = new ScientificObjectByContext();
         scientificObject.setRdfType(rdfType);
         scientificObject.setGeometry(geometry);
         scientificObject.setUriExperiment(experiment);

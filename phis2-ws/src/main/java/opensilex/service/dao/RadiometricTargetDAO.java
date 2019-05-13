@@ -427,7 +427,7 @@ public class RadiometricTargetDAO extends Rdf4jDAO<RadiometricTarget> {
     public RadiometricTarget getRadiometricTarget(String radiometricTargetUri) throws DAOPersistenceException {
         PropertyDAO propertyDAO = new PropertyDAO();
         RadiometricTarget radiometricTarget = new RadiometricTarget();
-        propertyDAO.getAllPropertiesWithLabels(radiometricTarget, null);
+        propertyDAO.getAllPropertiesWithLabels(radiometricTarget, null, null);
         return radiometricTarget;
     }
     

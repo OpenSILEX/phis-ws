@@ -11,7 +11,7 @@ import io.swagger.annotations.ApiModelProperty;
 import java.util.ArrayList;
 import javax.validation.Valid;
 import opensilex.service.documentation.DocumentationAnnotation;
-import opensilex.service.model.ScientificObject;
+import opensilex.service.model.ScientificObjectByContext;
 import opensilex.service.resource.dto.manager.AbstractVerifiedClass;
 import opensilex.service.resource.dto.rdfResourceDefinition.PropertyPostDTO;
 import opensilex.service.resource.validation.interfaces.Required;
@@ -39,8 +39,8 @@ public class ScientificObjectPutDTO  extends AbstractVerifiedClass {
     private ArrayList<PropertyPostDTO> properties;
 
     @Override
-    public ScientificObject createObjectFromDTO() {
-        ScientificObject scientificObject = new ScientificObject();
+    public ScientificObjectByContext createObjectFromDTO() {
+        ScientificObjectByContext scientificObject = new ScientificObjectByContext();
         scientificObject.setRdfType(rdfType);
         scientificObject.setGeometry(geometry);
         scientificObject.setIsPartOf(isPartOf);

@@ -47,7 +47,7 @@ import opensilex.service.documentation.StatusCodeMsg;
 import opensilex.service.model.BrapiVariable;
 import opensilex.service.model.Data;
 import opensilex.service.model.Experiment;
-import opensilex.service.model.ScientificObject;
+import opensilex.service.model.ScientificObjectByContext;
 import opensilex.service.model.StudyDetails;
 import opensilex.service.model.Variable;
 import opensilex.service.resource.validation.interfaces.Required;
@@ -511,7 +511,7 @@ public class StudiesResourceService implements BrapiCall {
         ArrayList<Status> statusList = new ArrayList<>();  
 
         ScientificObjectRdf4jDAO scientificObjectsDAO = new ScientificObjectRdf4jDAO();
-        ArrayList<ScientificObject> scientificObjects = scientificObjectsDAO.find(null, observationLevel, studyDbId, null);
+        ArrayList<ScientificObjectByContext> scientificObjects = scientificObjectsDAO.find(null, observationLevel, studyDbId, null);
 
         ExperimentSQLDAO experimentDAO = new ExperimentSQLDAO();
         experimentDAO.uri = studyDbId;
@@ -601,7 +601,7 @@ public class StudiesResourceService implements BrapiCall {
 
         ArrayList<BrapiObservationDTO> observations = new ArrayList();  
         ScientificObjectRdf4jDAO objectDAO = new ScientificObjectRdf4jDAO();
-        ArrayList<ScientificObject> objectsList = objectDAO.find(null, null, studyDAO.studyDbId, null);
+        ArrayList<ScientificObjectByContext> objectsList = objectDAO.find(null, null, studyDAO.studyDbId, null);
         ArrayList<Variable> variablesList = new ArrayList();
 
         if (variableURIs.isEmpty()) {  
@@ -626,7 +626,7 @@ public class StudiesResourceService implements BrapiCall {
             DataDAO dataDAOMongo = new DataDAO();
             dataDAOMongo.variableUri = variable.getUri();
             ArrayList<BrapiObservationDTO> observationsPerVariable = new ArrayList();
-            for (ScientificObject object:objectsList) {            
+            for (ScientificObjectByContext object:objectsList) {            
                 dataDAOMongo.objectUri = object.getUri();
                 ArrayList<Data> dataList = dataDAOMongo.allPaginate();
                 ArrayList<BrapiObservationDTO> observationsPerVariableAndObject = getObservationsFromData(dataList,variable,object);
@@ -645,7 +645,7 @@ public class StudiesResourceService implements BrapiCall {
      * @param object scientific object linked to the dataList
      * @return observations list 
      */
-    private ArrayList<BrapiObservationDTO> getObservationsFromData(ArrayList<Data> dataList, Variable variable, ScientificObject object) {
+    private ArrayList<BrapiObservationDTO> getObservationsFromData(ArrayList<Data> dataList, Variable variable, ScientificObjectByContext object) {
         SimpleDateFormat df = new SimpleDateFormat(DateFormat.YMDTHMSZ.toString());
         ArrayList<BrapiObservationDTO> observations = new ArrayList();
 
@@ -672,13 +672,13 @@ public class StudiesResourceService implements BrapiCall {
      * @param experiment Experiment linked to those scientific objects (user query filter)
      * @return observationUnits list 
      */
-    private ArrayList<BrapiObservationUnitDTO> getObservationUnitsResult(ArrayList<ScientificObject> scientificObjects, Experiment experiment) {
+    private ArrayList<BrapiObservationUnitDTO> getObservationUnitsResult(ArrayList<ScientificObjectByContext> scientificObjects, Experiment experiment) {
         SimpleDateFormat df = new SimpleDateFormat(DateFormat.YMDTHMSZ.toString());
         VariableDAO variableDaoSesame = new VariableDAO();
         ArrayList<Variable> variablesList = variableDaoSesame.allPaginate(); 
         ArrayList<BrapiObservationUnitDTO> observationUnitsList = new ArrayList();
 
-        for (ScientificObject object:scientificObjects) {
+        for (ScientificObjectByContext object:scientificObjects) {
             BrapiObservationUnitDTO unit = new BrapiObservationUnitDTO(object.getUri());
             unit.setObservationLevel(object.getRdfType());
             unit.setObservationUnitName(object.getLabel());

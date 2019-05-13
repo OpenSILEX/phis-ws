@@ -34,7 +34,7 @@ import opensilex.service.ontology.Rdfs;
 import opensilex.service.resource.dto.LayerDTO;
 import opensilex.service.utils.POSTResultsReturn;
 import opensilex.service.view.brapi.Status;
-import opensilex.service.model.ScientificObject;
+import opensilex.service.model.ScientificObjectByContext;
 import opensilex.service.model.Property;
 
 /**
@@ -50,7 +50,7 @@ public class LayerDAO extends DAO<LayerDTO>{
     public String depth;
     public String filePath;
     public String fileWebPath;
-    public HashMap<String, ScientificObject> children = new HashMap<>();
+    public HashMap<String, ScientificObjectByContext> children = new HashMap<>();
     
     private static final String LAYER_FILE_SERVER_DIRECTORY = PropertiesFileManager.getConfigFileProperty("service", "layerFileServerDirectory");
     private static final String LAYER_FILE_SERVER_ADDRESS = PropertiesFileManager.getConfigFileProperty("service", "layerFileServerAddress");
@@ -64,13 +64,13 @@ public class LayerDAO extends DAO<LayerDTO>{
         ScientificObjectRdf4jDAO agronomicalObjectDao = new ScientificObjectRdf4jDAO();
         ScientificObjectSQLDAO agronomicalObject = new ScientificObjectSQLDAO();
         
-        HashMap<String, ScientificObject> scientificObjectChildren = agronomicalObjectDao.searchChildren(layerDTO);
+        HashMap<String, ScientificObjectByContext> scientificObjectChildren = agronomicalObjectDao.searchChildren(layerDTO);
         
         ArrayList<String> childrenURIs = new ArrayList<>(scientificObjectChildren.keySet());
         HashMap<String,String> childrenAgronomicalObjectsGeometries = agronomicalObject.getGeometries(childrenURIs);
         
         scientificObjectChildren.entrySet().forEach((child) -> {
-            ScientificObject ao = child.getValue();
+            ScientificObjectByContext ao = child.getValue();
             ao.setGeometry(childrenAgronomicalObjectsGeometries.get(child.getKey()));
             children.put(child.getKey(), ao);
         });
@@ -142,7 +142,7 @@ public class LayerDAO extends DAO<LayerDTO>{
                 writer.write("\"type\" : \"FeatureCollection\",");
                 writer.write("\"features\" : [");
                 int nbChild = 0;
-                for (Entry<String, ScientificObject> child : children.entrySet()) {
+                for (Entry<String, ScientificObjectByContext> child : children.entrySet()) {
                     // Write each child
                     writer.write("{\"type\" : \"Feature\",");
 

@@ -250,7 +250,7 @@ public class InfrastructureResourceService extends ResourceService {
         Infrastructure infrastructure = new Infrastructure();
         infrastructure.setUri(uri);
         try {
-            if (propertyDAO.getAllPropertiesWithLabels(infrastructure, language)) {
+            if (propertyDAO.getAllPropertiesWithLabels(infrastructure, language, null)) {
                 // Convert the infrastructure to an InfrastructureDTO
                 list.add(new InfrastructureDTO(infrastructure));
                 

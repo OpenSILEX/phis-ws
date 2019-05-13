@@ -27,13 +27,13 @@ import opensilex.service.documentation.StatusCodeMsg;
 import opensilex.service.utils.POSTResultsReturn;
 import opensilex.service.utils.sql.SQLQueryBuilder;
 import opensilex.service.view.brapi.Status;
-import opensilex.service.model.ScientificObject;
+import opensilex.service.model.ScientificObjectByContext;
 
 /**
  * Scientific objects DAO for a relational database.
  * @author Morgane Vidal <morgane.vidal@inra.fr>
  */
-public class ScientificObjectSQLDAO extends PhisDAO<ScientificObject, Object> {
+public class ScientificObjectSQLDAO extends PhisDAO<ScientificObjectByContext, Object> {
     
     final static Logger LOGGER = LoggerFactory.getLogger(ScientificObjectSQLDAO.class);
     
@@ -53,7 +53,7 @@ public class ScientificObjectSQLDAO extends PhisDAO<ScientificObject, Object> {
         setTableAlias("ao");
     }
     
-    private POSTResultsReturn checkAndInsertScientificObjectsList(List<ScientificObject> newScientificObjects) throws Exception {
+    private POSTResultsReturn checkAndInsertScientificObjectsList(List<ScientificObjectByContext> newScientificObjects) throws Exception {
         //init result returned maps
         List<Status> insertStatusList = new ArrayList<>();
         boolean dataState = true;
@@ -81,7 +81,7 @@ public class ScientificObjectSQLDAO extends PhisDAO<ScientificObject, Object> {
                 
                 insertPreparedStatement = connection.prepareStatement(insertGab);
                 
-                for (ScientificObject scientificObject : newScientificObjects) {
+                for (ScientificObjectByContext scientificObject : newScientificObjects) {
                     if (!existInDB(scientificObject) && scientificObject.getGeometry() != null) {
                         insertionLeft = true;
                         insertPreparedStatement.setString(1, scientificObject.getUri());
@@ -160,7 +160,7 @@ public class ScientificObjectSQLDAO extends PhisDAO<ScientificObject, Object> {
         return results;
     }
     
-    public POSTResultsReturn checkAndInsertListAO(List<ScientificObject> newObjects) {
+    public POSTResultsReturn checkAndInsertListAO(List<ScientificObjectByContext> newObjects) {
         POSTResultsReturn postResult;
         try {
             postResult = this.checkAndInsertScientificObjectsList(newObjects);
@@ -191,23 +191,23 @@ public class ScientificObjectSQLDAO extends PhisDAO<ScientificObject, Object> {
     }
 
     @Override
-    public ScientificObject findByFields(Map<String, Object> Attr, String table) {
+    public ScientificObjectByContext findByFields(Map<String, Object> Attr, String table) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    public ScientificObject single(int id) {
+    public ScientificObjectByContext single(int id) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    public ArrayList<ScientificObject> all() {
+    public ArrayList<ScientificObjectByContext> all() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    public ScientificObject get(ResultSet result) throws SQLException {
-        ScientificObject scientificObject = new ScientificObject();
+    public ScientificObjectByContext get(ResultSet result) throws SQLException {
+        ScientificObjectByContext scientificObject = new ScientificObjectByContext();
         scientificObject.setUri(result.getString(URI));
         scientificObject.setGeometry(result.getString(GEOMETRY));
         scientificObject.setRdfType(result.getString(TYPE));
@@ -217,7 +217,7 @@ public class ScientificObjectSQLDAO extends PhisDAO<ScientificObject, Object> {
     }
 
     @Override
-    public ArrayList<ScientificObject> allPaginate() {
+    public ArrayList<ScientificObjectByContext> allPaginate() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
@@ -227,13 +227,59 @@ public class ScientificObjectSQLDAO extends PhisDAO<ScientificObject, Object> {
     }
 
     @Override
-    protected ScientificObject compareAndMergeObjects(ScientificObject fromDB, ScientificObject object) {
+    protected ScientificObjectByContext compareAndMergeObjects(ScientificObjectByContext fromDB, ScientificObjectByContext object) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
     protected SQLQueryBuilder prepareSearchQuery() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+    
+    /**
+     * Get the geometry of a given scientific object.
+     * @param scientificObject
+     * @return the geometry, null if no geometry founded.
+     * @example
+     * SELECT ST_AsGeoJSON(ST_Transform(geometry, 4326)), ao.uri  
+     * FROM "agronomical_object" AS ao 
+     * WHERE ao."uri" = 'http://www.opensilex.org/opensilex/2019/o19000019'
+     * @throws SQLException 
+     */
+    public String getGeometry(String scientificObject) throws SQLException {
+        Connection connection = null;
+        Statement statement = null;
+        
+        try {    
+            connection = dataSource.getConnection();
+            statement = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY, ResultSet.HOLD_CURSORS_OVER_COMMIT);
+
+            SQLQueryBuilder query = new SQLQueryBuilder();
+            query.appendSelect("ST_AsGeoJSON(ST_Transform(" + GEOMETRY + ", 4326)), ao." + URI);
+            query.appendFrom(table, tableAlias);
+            query.appendORWhereConditionIfNeeded(URI, scientificObject, "=", null, tableAlias);
+
+            LOGGER.debug(getTraceabilityLogs() + " quert : " + query.toString());
+
+            ResultSet queryResult = statement.executeQuery(query.toString());
+            String geometryToReturn = null;
+
+            if(queryResult.next()) {
+                geometryToReturn = queryResult.getString("st_asgeojson");
+            }
+            
+            return geometryToReturn;                
+        } catch (SQLException ex) {
+            java.util.logging.Logger.getLogger(ScientificObjectSQLDAO.class.getName()).log(Level.SEVERE, null, ex);
+            return null;
+        } finally {
+            if (statement != null) {
+                statement.close();
+            }
+            if (connection != null)  {
+                connection.close();
+            }
+        }
     }
     
     /**
@@ -320,8 +366,8 @@ public class ScientificObjectSQLDAO extends PhisDAO<ScientificObject, Object> {
      * @return the updated scientific object.
      * @throws SQLException 
      */
-    public ScientificObject updateOneGeometry(String uri, String geometry, String rdfType, String experiment) throws Exception {
-        ScientificObject scientificObject = new ScientificObject(uri);
+    public ScientificObjectByContext updateOneGeometry(String uri, String geometry, String rdfType, String experiment) throws Exception {
+        ScientificObjectByContext scientificObject = new ScientificObjectByContext(uri);
         scientificObject.setGeometry(geometry);
         try (Connection connection = dataSource.getConnection(); Statement statement = connection.createStatement()) {
             if (geometry == null || geometry.isEmpty()) {
@@ -354,27 +400,27 @@ public class ScientificObjectSQLDAO extends PhisDAO<ScientificObject, Object> {
     }
 
     @Override
-    public List<ScientificObject> create(List<ScientificObject> objects) throws DAOPersistenceException, Exception {
+    public List<ScientificObjectByContext> create(List<ScientificObjectByContext> objects) throws DAOPersistenceException, Exception {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    public void delete(List<ScientificObject> objects) throws DAOPersistenceException, Exception {
+    public void delete(List<ScientificObjectByContext> objects) throws DAOPersistenceException, Exception {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    public List<ScientificObject> update(List<ScientificObject> objects) throws DAOPersistenceException, Exception {
+    public List<ScientificObjectByContext> update(List<ScientificObjectByContext> objects) throws DAOPersistenceException, Exception {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    public ScientificObject findById(String id) throws DAOPersistenceException, Exception {
+    public ScientificObjectByContext findById(String id) throws DAOPersistenceException, Exception {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    public void validate(List<ScientificObject> objects) throws DAOPersistenceException, DAODataErrorAggregateException {
+    public void validate(List<ScientificObjectByContext> objects) throws DAOPersistenceException, DAODataErrorAggregateException {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 

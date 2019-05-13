@@ -34,7 +34,7 @@ import opensilex.service.resource.dto.AgronomicalDataDTO;
 import opensilex.service.resource.dto.DatasetDTO;
 import opensilex.service.utils.POSTResultsReturn;
 import opensilex.service.view.brapi.Status;
-import opensilex.service.model.ScientificObject;
+import opensilex.service.model.ScientificObjectByContext;
 import opensilex.service.model.AgronomicalData;
 import opensilex.service.model.Dataset;
 
@@ -205,7 +205,7 @@ public class DatasetDAO extends MongoDAO<Dataset> {
     private void updateScientificObjectsWithExperimentsScientificObjects() {
         ScientificObjectRdf4jDAO agronomicalObjectDao = new ScientificObjectRdf4jDAO();
         
-        ArrayList<ScientificObject> scientificObjectsSearched = agronomicalObjectDao.find(null, null, experiment, null);
+        ArrayList<ScientificObjectByContext> scientificObjectsSearched = agronomicalObjectDao.find(null, null, experiment, null);
         
         scientificObjectsSearched.forEach((scientificObject) -> {
             this.scientificObjects.add(scientificObject.getUri());

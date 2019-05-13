@@ -49,6 +49,9 @@ public class Property {
      */
     private String domain;
     
+    //The context inside of which the property is.
+    private String context;
+    
     /**
      * List of the labels of the property. Hash Map with the languages if needed.
      * If there is no language for a label, the key is equals to none (?).
@@ -170,6 +173,14 @@ public class Property {
     
     public void addValueLabels(Collection<String> labels) {
         valueLabels.addAll(labels);
+    }
+
+    public String getContext() {
+        return context;
+    }
+
+    public void setContext(String context) {
+        this.context = context;
     }
     
     @Override

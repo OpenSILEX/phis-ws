@@ -9,12 +9,13 @@
 package opensilex.service.model;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Scientific object model.
  * @author Morgane Vidal <morgane.vidal@inra.fr>
  */
-public class ScientificObject {
+public class ScientificObjectByContext {
     
     /**
      * Scientific object URI.
@@ -22,17 +23,11 @@ public class ScientificObject {
     private String uri;
     
     /**
-     * //SILEX:todo
-     * For the moment it is an attribute.
-     * Modify getAO (search) getting all properties, alias included
-     */
-    private String alias;
-       //\SILEX:todo
-    
-    /**
      * Type.
      */
     private String rdfType;
+    //Lables of the rdfType
+    private List<String> rdfTypeLabels = new ArrayList<>();
     
     /**
      * Geometry of the scientific object.
@@ -52,15 +47,16 @@ public class ScientificObject {
     private String year;
     //label of the scientific object
     private String label;
+    //list of labels of the scientific object
+    private List<String> labels = new ArrayList<>();
     //The properties of the scientific object
-    
     private ArrayList<Property> properties = new ArrayList<>();
 
-    public ScientificObject(String uri) {
+    public ScientificObjectByContext(String uri) {
         this.uri = uri;
     }
 
-    public ScientificObject() {
+    public ScientificObjectByContext() {
     }
     
     public String getUri() {
@@ -133,5 +129,25 @@ public class ScientificObject {
 
     public void setYear(String year) {
         this.year = year;
+    }
+
+    public List<String> getRdfTypeLabels() {
+        return rdfTypeLabels;
+    }
+    
+    public void addRdfTypeLabel(String rdfTypeLabel) {
+        rdfTypeLabels.add(rdfTypeLabel);
+    }
+
+    public List<String> getLabels() {
+        return labels;
+    }
+    
+    public void addLabel(String scientificObjectLabel) {
+        labels.add(scientificObjectLabel);
+    }
+
+    public void setProperties(ArrayList<Property> properties) {
+        this.properties = properties;
     }
 }

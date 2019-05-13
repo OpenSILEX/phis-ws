@@ -9,7 +9,7 @@ package opensilex.service.resource.dto.scientificObject;
 
 import java.util.ArrayList;
 import opensilex.service.model.Property;
-import opensilex.service.model.ScientificObject;
+import opensilex.service.model.ScientificObjectByContext;
 import opensilex.service.resource.dto.manager.AbstractVerifiedClass;
 import opensilex.service.resource.dto.rdfResourceDefinition.PropertyDTO;
 
@@ -45,7 +45,7 @@ public class ScientificObjectDTO extends AbstractVerifiedClass {
        
     }
     
-    public ScientificObjectDTO(ScientificObject scientificObject) {
+    public ScientificObjectDTO(ScientificObjectByContext scientificObject) {
         setUri(scientificObject.getUri());
         setRdfType(scientificObject.getRdfType());
         setGeometry(scientificObject.getGeometry());
@@ -59,8 +59,8 @@ public class ScientificObjectDTO extends AbstractVerifiedClass {
     }
     
     @Override
-    public ScientificObject createObjectFromDTO() {
-        ScientificObject scientificObject = new ScientificObject();
+    public ScientificObjectByContext createObjectFromDTO() {
+        ScientificObjectByContext scientificObject = new ScientificObjectByContext();
         scientificObject.setUri(uri);
         scientificObject.setRdfType(rdfType);
         scientificObject.setGeometry(geometry);

@@ -51,8 +51,10 @@ import opensilex.service.utils.ResourcesUtils;
 import opensilex.service.utils.UriGenerator;
 import opensilex.service.utils.sparql.SPARQLQueryBuilder;
 import opensilex.service.view.brapi.Status;
-import opensilex.service.model.ScientificObject;
+import opensilex.service.model.ScientificObjectByContext;
 import opensilex.service.model.Property;
+import opensilex.service.model.RdfResourceDefinition;
+import opensilex.service.model.ScientificObjectMultipleContext;
 import opensilex.service.model.Uri;
 
 /**
@@ -60,18 +62,22 @@ import opensilex.service.model.Uri;
  * @update [Morgane Vidal] 29 March, 2019: add update scientific objects and refactor to the new DAO conception.
  * @author Morgane Vidal <morgane.vidal@inra.fr>
  */
-public class ScientificObjectRdf4jDAO extends Rdf4jDAO<ScientificObject> {
+public class ScientificObjectRdf4jDAO extends Rdf4jDAO<ScientificObjectByContext> {
     
     final static Logger LOGGER = LoggerFactory.getLogger(ScientificObjectRdf4jDAO.class);
     
     //The following attributes are used to search scientific objects in the triplestore
     private final String EXPERIMENT = "experiment";
     private final String ALIAS = "alias";
+    private final String PARTICIPATES_IN = "participatesIn";
     private final String PROPERTY = "property";
     private final String PROPERTY_RELATION = "propertyRelation";
     private final String PROPERTY_TYPE = "propertyType";
+    private final String PROPERTY_LABEL = "propertyLabel";
     private final String CHILD = "child";
+    private final String RDF_TYPE_LABEL = "rdfTypeLabel";
     private final String RELATION = "relation";
+    private final String RELATION_LABEL = "relationTypeLabel";
     
     private static final String URI_CODE_SCIENTIFIC_OBJECT = "o";
 
@@ -169,14 +175,14 @@ public class ScientificObjectRdf4jDAO extends Rdf4jDAO<ScientificObject> {
      * @return
      * @throws RepositoryException 
      */
-    public POSTResultsReturn check(List<ScientificObject> scientificObjects) throws RepositoryException {
+    public POSTResultsReturn check(List<ScientificObjectByContext> scientificObjects) throws RepositoryException {
         //Expected results
         POSTResultsReturn scientificObjectsCheck = null;
         //Returned status list
         List<Status> checkStatusList = new ArrayList<>();
         
         boolean dataOk = true;
-        for (ScientificObject scientificObject : scientificObjects) {
+        for (ScientificObjectByContext scientificObject : scientificObjects) {
             //Check if the types are present in the ontology
             UriDAO uriDao = new UriDAO();
 
@@ -242,15 +248,15 @@ public class ScientificObjectRdf4jDAO extends Rdf4jDAO<ScientificObject> {
      * @param scientificObjects
      * @return 
      */
-    public POSTResultsReturn checkAndInsert(List<ScientificObject> scientificObjects) {
+    public POSTResultsReturn checkAndInsert(List<ScientificObjectByContext> scientificObjects) {
         POSTResultsReturn checkResult = check(scientificObjects);
         if (checkResult.statusList.size() > 0) { // Errors founded in the given scientific objects.
             return checkResult;
         } else { // No error founded, we can insert them.
               try {
-                  List<ScientificObject> createdScientificObjects = create(scientificObjects);
+                  List<ScientificObjectByContext> createdScientificObjects = create(scientificObjects);
                   ArrayList<String> createdScientificObjectsUris = new ArrayList<>();
-                  for (ScientificObject scientificObject : createdScientificObjects) {
+                  for (ScientificObjectByContext scientificObject : createdScientificObjects) {
                       createdScientificObjectsUris.add(scientificObject.getUri());
                   }
                   
@@ -346,8 +352,8 @@ public class ScientificObjectRdf4jDAO extends Rdf4jDAO<ScientificObject> {
      * @return children of layerDTO.getObjectURI. Returns the descendants if layerDTO.getDepth == true. 
      * (key: URI, value: type)
      */
-    public HashMap<String, ScientificObject> searchChildren(LayerDTO layerDTO) {
-        HashMap<String, ScientificObject> children = new HashMap<>(); // uri (clé), type (valeur)
+    public HashMap<String, ScientificObjectByContext> searchChildren(LayerDTO layerDTO) {
+        HashMap<String, ScientificObjectByContext> children = new HashMap<>(); // uri (clé), type (valeur)
         
         /* If it's an experiment, the link name isn't the same so we get the direct descendants first*/
         if (layerDTO.getObjectType().equals(Oeso.CONCEPT_EXPERIMENT.toString())) {
@@ -369,7 +375,7 @@ public class ScientificObjectRdf4jDAO extends Rdf4jDAO<ScientificObject> {
             //\SILEX:test
             while (result.hasNext()) {
                 BindingSet bindingSet = result.next();
-                ScientificObject scientificObject = children.get(bindingSet.getValue(CHILD).stringValue());
+                ScientificObjectByContext scientificObject = children.get(bindingSet.getValue(CHILD).stringValue());
                 if (scientificObject != null) { //Il suffit juste de lui ajouter la propriété. 
                     Property property = new Property();
                     property.setValue(bindingSet.getValue(PROPERTY).stringValue());
@@ -380,7 +386,7 @@ public class ScientificObjectRdf4jDAO extends Rdf4jDAO<ScientificObject> {
                     
                     scientificObject.addProperty(property);
                 } else { // not in the list, has to be added
-                    scientificObject = new ScientificObject();
+                    scientificObject = new ScientificObjectByContext();
                     scientificObject.setUri(bindingSet.getValue(CHILD).stringValue());
                     scientificObject.setRdfType(bindingSet.getValue(RDF_TYPE).stringValue());
                     
@@ -409,7 +415,7 @@ public class ScientificObjectRdf4jDAO extends Rdf4jDAO<ScientificObject> {
                     rep.initialize();
                     setConnection(rep.getConnection());
                     //\SILEX:test
-                for (Entry<String, ScientificObject> child : children.entrySet()) {
+                for (Entry<String, ScientificObjectByContext> child : children.entrySet()) {
                    
                     SPARQLQueryBuilder sparqlQuery = prepareSearchChildrenWithContains(
                             child.getKey(), 
@@ -421,7 +427,7 @@ public class ScientificObjectRdf4jDAO extends Rdf4jDAO<ScientificObject> {
                     while (result.hasNext()) {
                         BindingSet bindingSet = result.next();
                         if (!children.containsKey(bindingSet.getValue(CHILD).stringValue())) {
-                            ScientificObject scientificObject = new ScientificObject();
+                            ScientificObjectByContext scientificObject = new ScientificObjectByContext();
                             scientificObject.setUri(bindingSet.getValue(CHILD).stringValue());
                             scientificObject.setRdfType(bindingSet.getValue(RDF_TYPE).stringValue());
                             
@@ -453,7 +459,7 @@ public class ScientificObjectRdf4jDAO extends Rdf4jDAO<ScientificObject> {
                 
                 while (result.hasNext()) {
                     BindingSet bindingSet = result.next();
-                    ScientificObject scientificObject = new ScientificObject();
+                    ScientificObjectByContext scientificObject = new ScientificObjectByContext();
                     scientificObject.setUri(bindingSet.getValue(CHILD).stringValue());
                     scientificObject.setRdfType(bindingSet.getValue(RDF_TYPE).stringValue());
 
@@ -479,7 +485,7 @@ public class ScientificObjectRdf4jDAO extends Rdf4jDAO<ScientificObject> {
             
             while (result.hasNext()) {
                 BindingSet bindingSet = result.next();
-                ScientificObject scientificObject = new ScientificObject();
+                ScientificObjectByContext scientificObject = new ScientificObjectByContext();
                 scientificObject.setUri(bindingSet.getValue(CHILD).stringValue());
                 scientificObject.setRdfType(bindingSet.getValue(RDF_TYPE).stringValue());
 
@@ -499,7 +505,7 @@ public class ScientificObjectRdf4jDAO extends Rdf4jDAO<ScientificObject> {
      * @param alias
      * @return scientific objects list, result of the user query, empty if no result
      */
-    public ArrayList<ScientificObject> find(String uri, String rdfType, String experiment, String alias) {
+    public ArrayList<ScientificObjectByContext> find(String uri, String rdfType, String experiment, String alias) {
         try {
             SPARQLQueryBuilder sparqlQuery = prepareSearchQuery(uri, rdfType, experiment, alias);
             //SILEX:test
@@ -510,7 +516,7 @@ public class ScientificObjectRdf4jDAO extends Rdf4jDAO<ScientificObject> {
             //\SILEX:test
             
             TupleQuery tupleQuery = getConnection().prepareTupleQuery(QueryLanguage.SPARQL, sparqlQuery.toString());
-            Map<String, ScientificObject> foundedScientificObjects = new HashMap<>();
+            Map<String, ScientificObjectByContext> foundedScientificObjects = new HashMap<>();
             
             try (TupleQueryResult result = tupleQuery.evaluate()) {
                 while (result.hasNext()) {
@@ -523,7 +529,7 @@ public class ScientificObjectRdf4jDAO extends Rdf4jDAO<ScientificObject> {
                         alreadyFoundedUri = true;
                     }
                     
-                    ScientificObject scientificObject = null;
+                    ScientificObjectByContext scientificObject = null;
                     
                     Property property = new Property();
                     
@@ -536,7 +542,7 @@ public class ScientificObjectRdf4jDAO extends Rdf4jDAO<ScientificObject> {
                     if (alreadyFoundedUri) {
                         scientificObject = foundedScientificObjects.get(actualUri);
                     } else {
-                        scientificObject = new ScientificObject();
+                        scientificObject = new ScientificObjectByContext();
                         scientificObject.setUri(actualUri);
                         
                         if (experiment != null) {
@@ -565,7 +571,7 @@ public class ScientificObjectRdf4jDAO extends Rdf4jDAO<ScientificObject> {
             }
             
             ArrayList<String> scientificObjectsUris = new ArrayList<>();
-            ArrayList<ScientificObject> scientificObjects = new ArrayList<>();
+            ArrayList<ScientificObjectByContext> scientificObjects = new ArrayList<>();
             foundedScientificObjects.entrySet().forEach((entry) -> {
                 scientificObjects.add(entry.getValue());
                 scientificObjectsUris.add(entry.getKey());
@@ -690,17 +696,17 @@ public class ScientificObjectRdf4jDAO extends Rdf4jDAO<ScientificObject> {
     }
     
     @Override
-    public List create(List<ScientificObject> scientificObjects) throws Exception {
+    public List create(List<ScientificObjectByContext> scientificObjects) throws Exception {
         
         boolean resultState = false; // To know if the data are ok and have been inserted.
         boolean annotationInsert = true; // True if the insertion have been done.
         
-        final Iterator<ScientificObject> iteratorScientificObjects = scientificObjects.iterator();
+        final Iterator<ScientificObjectByContext> iteratorScientificObjects = scientificObjects.iterator();
         
         UriGenerator uriGenerator = new UriGenerator();
         
         while (iteratorScientificObjects.hasNext() && annotationInsert) {
-            ScientificObject scientificObject = iteratorScientificObjects.next();
+            ScientificObjectByContext scientificObject = iteratorScientificObjects.next();
             
             try {
                 //1. Generates scientific object URI.
@@ -785,7 +791,7 @@ public class ScientificObjectRdf4jDAO extends Rdf4jDAO<ScientificObject> {
             
             //3. insert in postgresql
             ScientificObjectSQLDAO scientificObjectDAO = new ScientificObjectSQLDAO();
-            ArrayList<ScientificObject> aos = new ArrayList<>();
+            ArrayList<ScientificObjectByContext> aos = new ArrayList<>();
             aos.add(scientificObject);
             scientificObjectDAO.checkAndInsertListAO(aos);
         }
@@ -804,16 +810,16 @@ public class ScientificObjectRdf4jDAO extends Rdf4jDAO<ScientificObject> {
      * @return the update result.
      * @throws Exception 
      */
-    public POSTResultsReturn checkAndUpdateInContext(ScientificObject scientificObject, String context) throws Exception {
+    public POSTResultsReturn checkAndUpdateInContext(ScientificObjectByContext scientificObject, String context) throws Exception {
         POSTResultsReturn updateResult;
         //1. Check the new data for the scientific object
-        ArrayList<ScientificObject> scientificObjects = new ArrayList<>();
+        ArrayList<ScientificObjectByContext> scientificObjects = new ArrayList<>();
         scientificObjects.add(scientificObject);
         updateResult = check(scientificObjects);
         if (updateResult.statusList.isEmpty()) { // No error founded, we can update the scientific object.
             //2. Update the scientific object.
             try {
-                ScientificObject updatedScientificObject = updateOneInContext(scientificObject, context);
+                ScientificObjectByContext updatedScientificObject = updateOneInContext(scientificObject, context);
 
                 ArrayList<String> updatedScientificObjectsUris = new ArrayList<>();
                 updatedScientificObjectsUris.add(updatedScientificObject.getUri());
@@ -834,7 +840,7 @@ public class ScientificObjectRdf4jDAO extends Rdf4jDAO<ScientificObject> {
     }
 
     @Override
-    public void delete(List<ScientificObject> objects) throws DAOPersistenceException, Exception {
+    public void delete(List<ScientificObjectByContext> objects) throws DAOPersistenceException, Exception {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
     
@@ -845,8 +851,8 @@ public class ScientificObjectRdf4jDAO extends Rdf4jDAO<ScientificObject> {
      * @return the scientific object if it exist,
      *         null if this scientific object does not exist.
      */
-    public ScientificObject getScientificObjectInContext(String uri, String context) {
-        ArrayList<ScientificObject> scientificObjects = find(uri, null, context, null);
+    public ScientificObjectByContext getScientificObjectInContext(String uri, String context) {
+        ArrayList<ScientificObjectByContext> scientificObjects = find(uri, null, context, null);
         if (!scientificObjects.isEmpty()) {
             return scientificObjects.get(0);
         } else {
@@ -870,7 +876,7 @@ public class ScientificObjectRdf4jDAO extends Rdf4jDAO<ScientificObject> {
      *  }
      * @return the generated query
      */
-    private UpdateRequest prepareDeleteOneInContextQuery(ScientificObject scientificObject, String context) {
+    private UpdateRequest prepareDeleteOneInContextQuery(ScientificObjectByContext scientificObject, String context) {
         UpdateBuilder updateBuilder = new UpdateBuilder();
         
         Node graph = NodeFactory.createURI(context);
@@ -916,7 +922,7 @@ public class ScientificObjectRdf4jDAO extends Rdf4jDAO<ScientificObject> {
      * }
      * @return the generated query
      */
-    private UpdateRequest prepareInsertOneInContextQuery(ScientificObject scientificObject, String context) {
+    private UpdateRequest prepareInsertOneInContextQuery(ScientificObjectByContext scientificObject, String context) {
         UpdateBuilder insertBuilder = new UpdateBuilder();
         
         Node graph = NodeFactory.createURI(context);
@@ -973,9 +979,9 @@ public class ScientificObjectRdf4jDAO extends Rdf4jDAO<ScientificObject> {
      * @param context
      * @return the updated scientific object
      */
-    public ScientificObject updateOneInContext(ScientificObject scientificObject, String context) throws Exception {
+    public ScientificObjectByContext updateOneInContext(ScientificObjectByContext scientificObject, String context) throws Exception {
         //1. Get the old scientific object data in the given experiment
-        ScientificObject oldScientificObject = getScientificObjectInContext(scientificObject.getUri(), context);
+        ScientificObjectByContext oldScientificObject = getScientificObjectInContext(scientificObject.getUri(), context);
         
         //2. Update the scientific object
         //2.1. Triplestore data
@@ -1007,7 +1013,7 @@ public class ScientificObjectRdf4jDAO extends Rdf4jDAO<ScientificObject> {
             
             //2.2 Relational database data
             ScientificObjectSQLDAO scientificObjectDAO = new ScientificObjectSQLDAO();
-            ScientificObject scientificObjectToSearchInDB = new ScientificObject();
+            ScientificObjectByContext scientificObjectToSearchInDB = new ScientificObjectByContext();
             scientificObjectToSearchInDB.setGeometry(scientificObject.getGeometry());
             scientificObjectToSearchInDB.setUri(scientificObject.getUri());
             //2.2.1 Check if it exist in the relational database
@@ -1016,7 +1022,7 @@ public class ScientificObjectRdf4jDAO extends Rdf4jDAO<ScientificObject> {
                 scientificObjectDAO.updateOneGeometry(scientificObject.getUri(), scientificObject.getGeometry(), scientificObject.getRdfType(), scientificObject.getExperiment());
             } else {
                 //2.2.1b Add new entry in database
-                ArrayList<ScientificObject> scientificObjects = new ArrayList<>();
+                ArrayList<ScientificObjectByContext> scientificObjects = new ArrayList<>();
                 scientificObjects.add(scientificObject);
                 scientificObjectDAO.checkAndInsertListAO(scientificObjects);
             }
@@ -1034,22 +1040,120 @@ public class ScientificObjectRdf4jDAO extends Rdf4jDAO<ScientificObject> {
     }
 
     @Override
-    public List<ScientificObject> update(List<ScientificObject> objects) throws DAOPersistenceException, Exception {
+    public List<ScientificObjectByContext> update(List<ScientificObjectByContext> objects) throws DAOPersistenceException, Exception {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    public ScientificObject find(ScientificObject object) throws DAOPersistenceException, Exception {
+    public ScientificObjectByContext find(ScientificObjectByContext object) throws DAOPersistenceException, Exception {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+    
+    /**
+     * Generates a query to get the list of the participatesIn relations of a given uri.
+     * @param uri
+     * @example
+     * SELECT ?participatesIn
+     * WHERE {
+     *      <http://www.opensilex.org/demo/o19000000001> <http://www.opensilex.org/vocabulary/oeso#participatesIn> ?participatesIn
+     * }
+     * @return the generated query
+     */
+    private SPARQLQueryBuilder prepareGetParticipatesIn(String uri) {
+        SPARQLQueryBuilder query = new SPARQLQueryBuilder();
+        query.appendDistinct(Boolean.TRUE);
+        
+        query.appendSelect("?" + PARTICIPATES_IN);
+        query.appendTriplet(uri, Oeso.RELATION_PARTICIPATES_IN.toString(), "?" + PARTICIPATES_IN, null);
+        LOGGER.debug(query.toString());
+        return query;
+    }
+    
+    /**
+     * Get the list of the participates in of a given scientific object represented by its uri.
+     * /!\ Prerequisite : the given scientific object uri must exist and be a scientific object.
+     * @param id
+     * @return the list of the participatesIn values.
+     */
+    private List<String> getParticipatesIn(String uri) {
+        SPARQLQueryBuilder participatesInQuery = prepareGetParticipatesIn(uri);
+        TupleQuery tupleQuery = getConnection().prepareTupleQuery(QueryLanguage.SPARQL, participatesInQuery.toString());
+        
+        List<String> participatesIn = new ArrayList<>();
+        try (TupleQueryResult result = tupleQuery.evaluate()) {
+            while (result.hasNext()) {
+                BindingSet bindingSet = result.next();
+                participatesIn.add(bindingSet.getValue(PARTICIPATES_IN).stringValue());
+            }
+        }
+        return participatesIn;
+    }
+    
+    /**
+     * Get the metadata of a given scientific object uri in a given context.
+     * @param uri
+     * @param context
+     * @return the metadata of the scientific object
+     */
+    private ScientificObjectByContext getScientificObjectMetadataInContext(String uri, String context, String language) throws DAOPersistenceException {
+        ScientificObjectByContext scientificObjectMetadata = new ScientificObjectByContext();
+        
+        //1. Set the context of the scientific object metadata
+        scientificObjectMetadata.setExperiment(context);
+        
+        
+        //2. Get the metadata of the scientific object in the context, using the propertyDAO
+        RdfResourceDefinition rdfResourceDefinition = new RdfResourceDefinition(uri);
+        PropertyDAO propertyDAO = new PropertyDAO();
+        
+        if (propertyDAO.getAllPropertiesWithLabels(rdfResourceDefinition, language, context)) {
+            scientificObjectMetadata.setProperties(rdfResourceDefinition.getProperties());
+            scientificObjectMetadata.addLabel(rdfResourceDefinition.getLabel());
+        } 
+        
+        return scientificObjectMetadata;
+    }
+    
+    /**
+     * Find a scientific object by its id with the wanted language for the metadata 
+     * of the scientific object.
+     * @param id
+     * @param language
+     * @return the scientific object founded.
+     * @throws DAOPersistenceException
+     * @throws Exception 
+     */
+    public ScientificObjectMultipleContext findByIdWithLanguage(String id, String language) throws DAOPersistenceException, Exception {
+        ScientificObjectMultipleContext scientificObject = null;
+        //1. Check if the given id of scientific object exist
+        if (existScientificObject(id)) {
+            scientificObject = new ScientificObjectMultipleContext();
+            //2. Get the geometry of the scientific object if it has one.
+            ScientificObjectSQLDAO scientificObjectDao = new ScientificObjectSQLDAO();
+            scientificObject.setUri(id);
+            scientificObject.setGeometry(scientificObjectDao.getGeometry(id));
+            
+            //3. Get the list of the experiments in which the scientific object participates
+            //and get for each of them the metadata of the scientific object in their context.
+            //3.1 Get "participatesIn" experiments.
+            List<String> participatesIn = getParticipatesIn(id);
+            
+            //3.2 Get for each "participatesIn" the metadata of the scientific object in the participatesIn context.
+            for (String context : participatesIn) {
+                scientificObject.addMetadataByContext(getScientificObjectMetadataInContext(id, context, language));
+            }
+        }
+        
+        return scientificObject;
+    }
+
+    @Override
+    public void validate(List<ScientificObjectByContext> objects) throws DAOPersistenceException, DAODataErrorAggregateException {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    public ScientificObject findById(String id) throws DAOPersistenceException, Exception {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public void validate(List<ScientificObject> objects) throws DAOPersistenceException, DAODataErrorAggregateException {
+    public ScientificObjectByContext findById(String id) throws DAOPersistenceException, Exception {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }

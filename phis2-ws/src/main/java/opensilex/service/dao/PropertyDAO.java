@@ -50,6 +50,7 @@ import opensilex.service.view.brapi.Status;
 import opensilex.service.model.Cardinality;
 import opensilex.service.model.RdfResourceDefinition;
 import opensilex.service.model.Property;
+import opensilex.service.ontology.Contexts;
 import org.eclipse.rdf4j.query.QueryEvaluationException;
 
 //SILEX:todo
@@ -710,10 +711,14 @@ public class PropertyDAO extends Rdf4jDAO<Property> {
      *     } 
      * }
      */
-    protected SPARQLQueryBuilder prepareSearchPropertiesQuery(String objectUri, String language, ArrayList<String> relationsToIgnore) {
+    protected SPARQLQueryBuilder prepareSearchPropertiesQuery(String objectUri, String language, String context, ArrayList<String> relationsToIgnore) {
         
         SPARQLQueryBuilder query = new SPARQLQueryBuilder();
         query.appendDistinct(Boolean.TRUE);
+        
+        if (context != null) {
+            query.appendFrom("<" + Contexts.VOCABULARY.toString() + ">" + " FROM <" + context + ">");
+        }
 
         query.appendSelect("?" + RELATION);
         query.appendSelect("?" + RELATION_PREF_LABEL);
@@ -823,13 +828,14 @@ public class PropertyDAO extends Rdf4jDAO<Property> {
      * @param definition The definition object which will be filled
      * @param language specify in which language labels should be returned. The 
      * language can be null
+     * @param context
      * @return true    if the definition object is correctly filled
      *          false   if the URI doesn't exists
      * @throws opensilex.service.dao.exception.DAOPersistenceException
      */
-    public boolean getAllPropertiesWithLabels(RdfResourceDefinition definition, String language) 
+    public boolean getAllPropertiesWithLabels(RdfResourceDefinition definition, String language, String context) 
             throws DAOPersistenceException {
-        return getAllPropertiesWithLabelsExceptThoseSpecified(definition, language, null);
+        return getAllPropertiesWithLabelsExceptThoseSpecified(definition, language, context, null);
     }       
     
      /**
@@ -837,23 +843,22 @@ public class PropertyDAO extends Rdf4jDAO<Property> {
      * and fills the RDF Resource definition object with the values and labels.
      * @param definition The definition object which will be filled
      * @param language specify in which language labels should be returned.
+     * @param context
      * @param propertiesRelationsToIgnore some relations sometimes must not be 
      * considered as properties so we ignore them
      * @return true    if the definition object is correctly filled
      *          false   if the URI doesn't exist
      * @throws opensilex.service.dao.exception.DAOPersistenceException
      */
-    public boolean getAllPropertiesWithLabelsExceptThoseSpecified(RdfResourceDefinition definition, String language, ArrayList<String> propertiesRelationsToIgnore) 
+    public boolean getAllPropertiesWithLabelsExceptThoseSpecified(RdfResourceDefinition definition, String language, String context, ArrayList<String> propertiesRelationsToIgnore) 
             throws DAOPersistenceException {
         String objectUri = definition.getUri();
         if (this.existUri(objectUri)) {
             /* Prepare and execute the query to retrieve all the relations, 
              properties and properties type with their labels for the given 
             uri and language*/
-            SPARQLQueryBuilder query = prepareSearchPropertiesQuery(objectUri, language, propertiesRelationsToIgnore);
+            SPARQLQueryBuilder query = prepareSearchPropertiesQuery(objectUri, language, context, propertiesRelationsToIgnore);
             TupleQuery tupleQuery = getConnection().prepareTupleQuery(QueryLanguage.SPARQL, query.toString());
-        
-            definition.setUri(objectUri);
         
             try {
                 TupleQueryResult result = tupleQuery.evaluate();

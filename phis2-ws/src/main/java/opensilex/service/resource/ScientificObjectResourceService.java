@@ -44,8 +44,12 @@ import opensilex.service.view.brapi.Status;
 import opensilex.service.view.brapi.form.AbstractResultForm;
 import opensilex.service.view.brapi.form.ResponseFormPOST;
 import opensilex.service.result.ResultForm;
-import opensilex.service.model.ScientificObject;
+import opensilex.service.model.ScientificObjectByContext;
+import opensilex.service.model.ScientificObjectMultipleContext;
+import static opensilex.service.resource.DocumentResourceService.LOGGER;
+import opensilex.service.resource.dto.manager.AbstractVerifiedClass;
 import opensilex.service.resource.dto.scientificObject.ScientificObjectDTO;
+import opensilex.service.resource.dto.scientificObject.ScientificObjectDetailDTO;
 import opensilex.service.resource.dto.scientificObject.ScientificObjectPostDTO;
 import opensilex.service.resource.dto.scientificObject.ScientificObjectPutDTO;
 import opensilex.service.resource.validation.interfaces.Required;
@@ -64,25 +68,10 @@ public class ScientificObjectResourceService extends ResourceService {
      * @param scientificObjectDTOs
      * @return the transformed list
      */
-    private List<ScientificObject> scientificObjectPostsDTOsToScientificObjects(List<ScientificObjectPostDTO> scientificObjectDTOs) {
-        ArrayList<ScientificObject> scientificObjects = new ArrayList<>();
+    private List<ScientificObjectByContext> scientificObjectPostsDTOsToScientificObjects(List<ScientificObjectPostDTO> scientificObjectDTOs) {
+        ArrayList<ScientificObjectByContext> scientificObjects = new ArrayList<>();
         
         for (ScientificObjectPostDTO scientificObjectDTO : scientificObjectDTOs) {
-            scientificObjects.add(scientificObjectDTO.createObjectFromDTO());
-        }
-        
-        return scientificObjects;
-    }
-    
-    /**
-     * Transform ScientificObjectPutDTO to ScientificObject
-     * @param scientificObjectPutDTOs
-     * @return the transformed list
-     */
-    private List<ScientificObject> scientificObjectPutDTOsToScientificObjects(List<ScientificObjectPutDTO> scientificObjectPutDTOs) {
-        ArrayList<ScientificObject> scientificObjects = new ArrayList<>();
-        
-        for (ScientificObjectPutDTO scientificObjectDTO : scientificObjectPutDTOs) {
             scientificObjects.add(scientificObjectDTO.createObjectFromDTO());
         }
         
@@ -231,7 +220,7 @@ public class ScientificObjectResourceService extends ResourceService {
         
         ScientificObjectRdf4jDAO scientificObjectDAO = new ScientificObjectRdf4jDAO();
         
-        ScientificObject scientificObject = scientificObjectDTO.createObjectFromDTO();
+        ScientificObjectByContext scientificObject = scientificObjectDTO.createObjectFromDTO();
         scientificObject.setUri(uri);
         POSTResultsReturn result = scientificObjectDAO.checkAndUpdateInContext(scientificObject, experiment);
         
@@ -281,7 +270,7 @@ public class ScientificObjectResourceService extends ResourceService {
         scientificObjectDaoSesame.setPage(page);
         scientificObjectDaoSesame.setPageSize(pageSize);
         
-        ArrayList<ScientificObject> scientificObjects = scientificObjectDaoSesame.find(uri, rdfType, experimentURI, alias);
+        ArrayList<ScientificObjectByContext> scientificObjects = scientificObjectDaoSesame.find(uri, rdfType, experimentURI, alias);
         
         if (scientificObjects == null) { //Request failure
             getResponse = new ResultForm<>(0, 0, scientificObjectsToReturn, true);
@@ -302,6 +291,104 @@ public class ScientificObjectResourceService extends ResourceService {
                 getResponse.setStatus(statusList);
                 return Response.status(Response.Status.OK).entity(getResponse).build();
             }
+        }
+    }
+    
+    /**
+     * Get the metadata of a scientific object. The metadata is organized by context.
+     * @param uri
+     * @param language
+     * @param pageSize
+     * @param page
+     * @return the metadata of the scientific object
+     * @example 
+     * {
+     *      "metadata": {
+     *          "pagination": null,
+     *          "status": [],
+     *          "datafiles": []
+     *      },
+     *      "result": {
+     *          "data": [
+     *              {
+     *                 "uri": "http://www.opensilex.org/opensilex/2019/o19000019",
+     *                 "geometry": "{\"type\":\"Point\",\"coordinates\":[0,1]}",
+     *                 "usedIn": [
+     *                     {
+     *                         "context": "http://www.opensilex.org/demo/DMO2018-1",
+     *                         "labels": [
+     *                             "nA"
+     *                         ],
+     *                         "properties": [
+     *                               {
+     *                                   "rdfTypeLabels": [],
+     *                                   "relationLabels": [],
+     *                                   "valueLabels": [
+     *                                       "micro parcelle"
+     *                                   ],
+     *                                   "rdfType": "http://www.w3.org/2002/07/owl#Class",
+     *                                   "relation": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+     *                                   "value": "http://www.opensilex.org/vocabulary/oeso#Plot"
+     *                              },
+     *                              {
+     *                                   "rdfTypeLabels": [],
+     *                                   "relationLabels": [
+     *                                       "participe à"
+     *                                    ],
+     *                                   "valueLabels": [],
+     *                                   "rdfType": null,
+     *                                   "relation": "http://www.opensilex.org/vocabulary/oeso#participatesIn",
+     *                                   "value": "http://www.opensilex.org/demo/DMO2018-1"
+     *                              }
+     *                          ]
+     *                      }
+     *                  ]
+     *              }
+     *          ]
+     *      }
+     *
+     * }
+     */
+    @GET
+    @Path("{uri}")
+    @ApiOperation(value = "Get a scientific object.",
+                  notes = "Retrieve a scientific object.")
+    @ApiResponses(value = {
+        @ApiResponse(code = 200, message = "Retrieve all scientific objects", response = ScientificObjectDTO.class, responseContainer = "List"),
+        @ApiResponse(code = 400, message = DocumentationAnnotation.BAD_USER_INFORMATION),
+        @ApiResponse(code = 401, message = DocumentationAnnotation.USER_NOT_AUTHORIZED),
+        @ApiResponse(code = 500, message = DocumentationAnnotation.ERROR_FETCH_DATA)
+    })
+    @ApiImplicitParams({
+         @ApiImplicitParam(name = GlobalWebserviceValues.AUTHORIZATION, required = true,
+                         dataType = GlobalWebserviceValues.DATA_TYPE_STRING, paramType = GlobalWebserviceValues.HEADER,
+                         value = DocumentationAnnotation.ACCES_TOKEN,
+                         example = GlobalWebserviceValues.AUTHENTICATION_SCHEME + " ")
+    })
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getDetails(
+        @ApiParam(value = DocumentationAnnotation.SCIENTIFIC_OBJECT_URI_DEFINITION, example = DocumentationAnnotation.EXAMPLE_SCIENTIFIC_OBJECT_URI, required = true) @PathParam("uri") @URL @Required String uri,
+            @ApiParam(value = "Language", example = DocumentationAnnotation.EXAMPLE_LANGUAGE) @QueryParam("language") String language,
+        @ApiParam(value = DocumentationAnnotation.PAGE_SIZE) @QueryParam(GlobalWebserviceValues.PAGE_SIZE) @DefaultValue(DefaultBrapiPaginationValues.PAGE_SIZE) @Min(0) int pageSize,
+        @ApiParam(value = DocumentationAnnotation.PAGE) @QueryParam(GlobalWebserviceValues.PAGE) @DefaultValue(DefaultBrapiPaginationValues.PAGE) @Min(0) int page) {
+        
+        ScientificObjectRdf4jDAO scientificObjectDAO = new ScientificObjectRdf4jDAO();
+        scientificObjectDAO.user = userSession.getUser();
+
+        try {
+            ScientificObjectMultipleContext scientificObject = scientificObjectDAO.findByIdWithLanguage(uri, language);
+            ArrayList<ScientificObjectDetailDTO> result = new ArrayList<>();
+            if (scientificObject == null) {
+                return getGETResponseWhenNoResult();
+            } else {
+                result.add(new ScientificObjectDetailDTO(scientificObject));
+                ResultForm resultForm = new ResultForm<>(0, 0, result, true, 0);
+                resultForm.setStatus(new ArrayList<>());
+                return Response.status(Response.Status.OK).entity(resultForm).build();
+            }
+        } catch (Exception ex) {
+            LOGGER.error(ex.getMessage(), ex);
+            return getResponseWhenInternalError(ex);
         }
     }
 }
