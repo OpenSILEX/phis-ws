@@ -45,8 +45,4 @@ public class FactorDTO extends RdfResourceDTO{
     public void setOntologiesReferences(ArrayList<OntologyReference> ontologiesReferences) {
         this.ontologiesReferences = ontologiesReferences;
     }
-
-    
-    
-    
 }

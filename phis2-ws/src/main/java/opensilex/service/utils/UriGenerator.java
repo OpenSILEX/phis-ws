@@ -729,7 +729,6 @@ public class UriGenerator {
         }
 
         return PLATFORM_URI_ID_FACTORS + factorId;
-    
     }
     
     /**
