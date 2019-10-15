@@ -12,7 +12,5 @@ package opensilex.service.model;
  * @author Arnaud Charleroy <arnaud.charleroy@inra.fr>
  */
 public class Factor extends RdfResourceDefinition {
-    
-    
-    
+   
 }

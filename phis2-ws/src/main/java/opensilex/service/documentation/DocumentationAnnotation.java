@@ -304,7 +304,6 @@ public final class DocumentationAnnotation {
     public static final String EXAMPLE_ANNOTATION_MOTIVATED_BY = "http://www.w3.org/ns/oa#commenting";
     public static final String EXAMPLE_ANNOTATION_BODY_VALUE = "Ustilago maydis infection";
     public static final String EXAMPLE_ANNOTATION_CREATOR = "http://www.opensilex.org/demo/id/agent/marie_dupond";
-
     
     public static final String EXAMPLE_FACTOR_RDF_TYPE = "http://www.opensilex.org/vocabulary/oeso#Factor";
     public static final String EXAMPLE_FACTOR_URI = "http://www.opensilex.org/id/factor/f001";
@@ -324,9 +323,4 @@ public final class DocumentationAnnotation {
     
     public static final String FACTOR_POST_DATA_DEFINITION = "JSON format of factor";
     public static final String FACTOR_URI_DEFINITION = "A factor URI (Unique Resource Identifier)";
-}    
-    
- 
-
-    
-    
+}

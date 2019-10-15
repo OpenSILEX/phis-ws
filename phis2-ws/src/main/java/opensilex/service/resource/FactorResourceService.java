@@ -44,7 +44,7 @@ import opensilex.service.view.brapi.form.ResponseFormPOST;
 
 /**
  * Factor resource service.
- * @author Morgane Vidal <morgane.vidal@inra.fr>
+ * @author Arnaud Charleroy
  */
 @Api("/factors")
 @Path("/factors")
@@ -52,13 +52,13 @@ public class FactorResourceService extends ResourceService {
     
     /**
      * Generates a factorDTO list from a given list of factor.
-     * @param factor
+     * @param factors A list of factor models
      * @return the list of factor DTOs
      */
-    private ArrayList<FactorDTO> factorToFactorDTO(ArrayList<Factor> factor) {
+    private ArrayList<FactorDTO> factorToFactorDTO(ArrayList<Factor> factors) {
         ArrayList<FactorDTO> factorDTO = new ArrayList<>();
         
-        factor.forEach((factorEntity) -> {
+        factors.forEach((factorEntity) -> {
             factorDTO.add(new FactorDTO(factorEntity));
         });
         
@@ -69,9 +69,9 @@ public class FactorResourceService extends ResourceService {
      * Gets the factor corresponding to the search parameters given.
      * @param pageSize
      * @param page
-     * @param uri
-     * @param label
-     * @param language
+     * @param uri uri of the factor
+     * @param label label of the factor
+     * @param language language of the factor label
      * @return the result
      * @example 
      * {
@@ -88,14 +88,16 @@ public class FactorResourceService extends ResourceService {
      *    "result": {
      *      "data": [
      *          {
-     *              "uri": "http://www.phenome-fppn.fr/id/factor/zeamays",
+     *              "uri": "http://www.phenome-fppn.fr/test/id/factors/f001",
      *              "label": "Water Exposure",
-     *              "comment" : "Change the frequency on water addition"
+     *              "comment" : "Change the frequency on water addition",
+     *              "ontologiesReferences": []
      *          },
      *          {
-     *              "uri": "http://www.phenome-fppn.fr/id/factor/gossypiumhirsutum",
+     *              "uri": ""http://www.phenome-fppn.fr/test/id/factors/f002",
      *              "label": "Shading management",
-     *              "comment" : "Apply different shading process on entities"
+     *              "comment" : "Apply different shading process on entities",
+     *              "ontologiesReferences": []
      *          }
      *      ]
      *    }
@@ -123,10 +125,10 @@ public class FactorResourceService extends ResourceService {
         @ApiParam(value = "Search by factor uri", example = DocumentationAnnotation.EXAMPLE_FACTOR_URI) @QueryParam("uri") @URL String uri,
         @ApiParam(value = "Search by factor label", example = DocumentationAnnotation.EXAMPLE_FACTOR_LABEL) @QueryParam("label") String label,
         @ApiParam(value = "Select language", example = DocumentationAnnotation.EXAMPLE_LANGUAGE) @QueryParam("language") String language) {
-        //1. Initialize factor filter
-        Factor filter = new Factor();
-        filter.setUri(uri);
-        filter.setLabel(label);
+        //1. Initialize factor factorFilter
+        Factor factorFilter = new Factor();
+        factorFilter.setUri(uri);
+        factorFilter.setLabel(label);
         
         if (language == null) {
             language = DEFAULT_LANGUAGE;
@@ -137,9 +139,13 @@ public class FactorResourceService extends ResourceService {
         factorDAO.setPageSize(pageSize);
         
         //2. Get number of factor result
-        int totalCount = factorDAO.countWithFilter(filter.getUri(),filter.getLabel(),language);
+        int totalCount = factorDAO.countWithFilter(factorFilter.getUri(),factorFilter.getLabel(),language);
+        
         //3. Get factors result
-        ArrayList<Factor> searchResult = factorDAO.findAll(filter.getUri(),filter.getLabel(),language);
+        ArrayList<Factor> searchResult = new ArrayList<>();
+        if(totalCount > 0){
+            searchResult = factorDAO.findAll(factorFilter.getUri(),factorFilter.getLabel(),language);
+        }
         
         //4. Send result
         ResultForm<FactorDTO> getResponse;
@@ -158,12 +164,10 @@ public class FactorResourceService extends ResourceService {
         }
     }
     
-    
-    
      /**
      * Factor POST service.
-     * @param factor
-     * @param context
+     * @param factorList list of DTO factors
+     * @param context http request context
      * @return the POST result
      */
     @POST
@@ -183,10 +187,10 @@ public class FactorResourceService extends ResourceService {
     })
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response postUnit(@ApiParam(value = DocumentationAnnotation.FACTOR_POST_DATA_DEFINITION, required = true) @Valid ArrayList<FactorDTO> factor,
+    public Response postUnit(@ApiParam(value = DocumentationAnnotation.FACTOR_POST_DATA_DEFINITION, required = true) @Valid ArrayList<FactorDTO> factorList,
                               @Context HttpServletRequest context) {
         AbstractResultForm postResponse = null;
-        if (factor != null && !factor.isEmpty()) {
+        if (factorList != null && !factorList.isEmpty()) {
             FactorDAO factorDao = new FactorDAO();
             if (context.getRemoteAddr() != null) {
                 factorDao.remoteUserAdress = context.getRemoteAddr();
@@ -194,10 +198,10 @@ public class FactorResourceService extends ResourceService {
             
             factorDao.user = userSession.getUser();
             
-            POSTResultsReturn result = factorDao.checkAndInsert(factor);
+            POSTResultsReturn result = factorDao.checkAndInsert(factorList);
             
             if (result.getHttpStatus().equals(Response.Status.CREATED)) {
-                //Code 201: factor inserted
+                //Code 201: factorList inserted
                 postResponse = new ResponseFormPOST(result.statusList);
                 postResponse.getMetadata().setDatafiles(result.getCreatedResources());
             } else if (result.getHttpStatus().equals(Response.Status.BAD_REQUEST)
@@ -211,5 +215,4 @@ public class FactorResourceService extends ResourceService {
             return Response.status(Response.Status.BAD_REQUEST).entity(postResponse).build();
         }
     }
-    
 }

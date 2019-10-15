@@ -7,14 +7,12 @@
 //******************************************************************************
 package opensilex.service.dao;
 
-import com.google.gson.Gson;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import static opensilex.service.dao.MethodDAO.LOGGER;
 import opensilex.service.dao.exception.DAODataErrorAggregateException;
 import opensilex.service.dao.exception.DAOPersistenceException;
 import opensilex.service.dao.exception.ResourceAccessDeniedException;
@@ -24,12 +22,10 @@ import opensilex.service.model.Factor;
 import opensilex.service.model.OntologyReference;
 import opensilex.service.ontology.Contexts;
 import opensilex.service.ontology.Oeso;
-import opensilex.service.ontology.Rdfs;
 import opensilex.service.ontology.Skos;
 import opensilex.service.resource.dto.factor.FactorDTO;
 import opensilex.service.utils.POSTResultsReturn;
 import opensilex.service.utils.UriGenerator;
-import opensilex.service.utils.sparql.SPARQLQueryBuilder;
 import opensilex.service.view.brapi.Status;
 import static org.apache.jena.arq.querybuilder.AbstractQueryBuilder.makeVar;
 import org.apache.jena.arq.querybuilder.ExprFactory;
@@ -37,7 +33,6 @@ import org.apache.jena.arq.querybuilder.SelectBuilder;
 import org.apache.jena.arq.querybuilder.UpdateBuilder;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
-import org.apache.jena.graph.Triple;
 import org.apache.jena.query.Query;
 import org.apache.jena.query.SortCondition;
 import org.apache.jena.rdf.model.Literal;
@@ -107,7 +102,11 @@ public class FactorDAO extends Rdf4jDAO<Factor> {
         }
         return factors;
     }
-
+    /**
+     * Return ontology references of an uri
+     * @param uri
+     * @return 
+     */
     private ArrayList<OntologyReference> getOntologyReferences(String uri) {
         ArrayList<OntologyReference> ontologyReferences = new ArrayList<>();
 
@@ -202,6 +201,14 @@ public class FactorDAO extends Rdf4jDAO<Factor> {
         return query;
     }
 
+    /**
+     * Prepare a common request base for count and search query
+     * @param uri uri of the factor
+     * @param label label of the factor
+     * @param language language of the factor
+     * @return SelectBuilder query object
+     * @throws ParseException 
+     */
     protected SelectBuilder searchQueryTemplate(String uri, String label, String language) throws ParseException {
         SelectBuilder query = new SelectBuilder();
 
@@ -232,6 +239,14 @@ public class FactorDAO extends Rdf4jDAO<Factor> {
         return query;
     }
 
+    /**
+     * Retreive specific parameters from the common template search query
+     * @param uri uri of the factor
+     * @param label label of the factor
+     * @param language language of the factor
+     * @return query
+     * @throws ParseException 
+     */
     protected SelectBuilder prepareSearchQuery(String uri, String label, String language) throws ParseException {
         SelectBuilder query = searchQueryTemplate(uri, label, language);
         if (uri == null) {
@@ -244,6 +259,14 @@ public class FactorDAO extends Rdf4jDAO<Factor> {
         return query;
     }
 
+    /**
+     * Count the number of results from the common template search query
+     * @param uri uri of the factor
+     * @param label label of the factor
+     * @param language language of the factor
+     * @return query
+     * @throws ParseException 
+     */
     protected SelectBuilder prepareCountQuery(String uri, String label, String language) throws ParseException {
         SelectBuilder query = searchQueryTemplate(uri, label, language);
         query.addVar("count(*)", "?" + COUNT_ELEMENT_QUERY);
@@ -255,9 +278,9 @@ public class FactorDAO extends Rdf4jDAO<Factor> {
      * Get an factor from a binding set given resulting from a query to the
      * triplestore.
      *
-     * @param bindingSet
-     * @param uri
-     * @param label
+     * @param bindingSet data from the triplestore
+     * @param uri uri of the factor
+     * @param label label of the factor
      * @return
      */
     private Factor getFactorFromBindingSet(BindingSet bindingSet, String uri, String label) {
@@ -281,9 +304,9 @@ public class FactorDAO extends Rdf4jDAO<Factor> {
     /**
      * Counts the query result with the given filter.
      *
-     * @param uri
-     * @param label
-     * @param language
+     * @param uri uri of a factor object
+     * @param label  label of a factor object
+     * @param language language of the facotr label
      * @return The number of results for a given filter.
      */
     public int countWithFilter(String uri, String label, String language) {
@@ -330,7 +353,7 @@ public class FactorDAO extends Rdf4jDAO<Factor> {
      */
     public POSTResultsReturn check(List<FactorDTO> factorsDTO) {
         //Résultats attendus
-        POSTResultsReturn traitsCheck;
+        POSTResultsReturn factorCheck;
         //Liste des status retournés
         List<Status> checkStatusList = new ArrayList<>();
         boolean dataOk = true;
@@ -355,9 +378,9 @@ public class FactorDAO extends Rdf4jDAO<Factor> {
             }
         }
 
-        traitsCheck = new POSTResultsReturn(dataOk, null, dataOk);
-        traitsCheck.statusList = checkStatusList;
-        return traitsCheck;
+        factorCheck = new POSTResultsReturn(dataOk, null, dataOk);
+        factorCheck.statusList = checkStatusList;
+        return factorCheck;
     }
 
     /**
@@ -430,14 +453,14 @@ public class FactorDAO extends Rdf4jDAO<Factor> {
     }
 
     /**
-     * Gets the higher id of the variables.
+     * Gets the higher id of the factor.
      *
      * @return the id
      */
     public int getLastId() {
         Query query = prepareGetLastId();
 
-        //get last variable uri ID inserted
+        //get last factor uri ID inserted
         TupleQuery tupleQuery = this.getConnection().prepareTupleQuery(QueryLanguage.SPARQL, query.toString());
         TupleQueryResult result = tupleQuery.evaluate();
 
@@ -524,5 +547,4 @@ public class FactorDAO extends Rdf4jDAO<Factor> {
     public void validate(List<Factor> objects) throws DAOPersistenceException, DAODataErrorAggregateException, DAOPersistenceException, ResourceAccessDeniedException {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
-
 }
