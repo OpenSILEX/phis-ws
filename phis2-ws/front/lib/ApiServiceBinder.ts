@@ -1,0 +1,75 @@
+import {interfaces} from "inversify";
+
+import { AcquisitionSessionsService } from './api/acquisitionSessions.service';
+import { ActuatorsService } from './api/actuators.service';
+import { AnnotationsService } from './api/annotations.service';
+import { Brapiv1callsService } from './api/brapiv1calls.service';
+import { Brapiv1studiesService } from './api/brapiv1studies.service';
+import { Brapiv1studiesSearchService } from './api/brapiv1studiesSearch.service';
+import { Brapiv1tokenService } from './api/brapiv1token.service';
+import { Brapiv1traitsService } from './api/brapiv1traits.service';
+import { Brapiv1variablesService } from './api/brapiv1variables.service';
+import { DataService } from './api/data.service';
+import { DatasetsService } from './api/datasets.service';
+import { DocumentsService } from './api/documents.service';
+import { EnvironmentsService } from './api/environments.service';
+import { EventsService } from './api/events.service';
+import { ExperimentsService } from './api/experiments.service';
+import { GroupService } from './api/group.service';
+import { ImagesService } from './api/images.service';
+import { InfrastructuresService } from './api/infrastructures.service';
+import { LayersService } from './api/layers.service';
+import { MethodsService } from './api/methods.service';
+import { ProjectsService } from './api/projects.service';
+import { ProvenancesService } from './api/provenances.service';
+import { RadiometricTargetsService } from './api/radiometricTargets.service';
+import { ScientificObjectsService } from './api/scientificObjects.service';
+import { SensorsService } from './api/sensors.service';
+import { SpeciesService } from './api/species.service';
+import { TraitsService } from './api/traits.service';
+import { TripletsService } from './api/triplets.service';
+import { UnitsService } from './api/units.service';
+import { UriService } from './api/uri.service';
+import { UserService } from './api/user.service';
+import { VariablesService } from './api/variables.service';
+import { VectorsService } from './api/vectors.service';
+import { VocabulariesService } from './api/vocabularies.service';
+
+export class ApiServiceBinder {
+    public static with(container: interfaces.Container) {
+        container.bind<AcquisitionSessionsService>("AcquisitionSessionsService").to(AcquisitionSessionsService).inSingletonScope();
+        container.bind<ActuatorsService>("ActuatorsService").to(ActuatorsService).inSingletonScope();
+        container.bind<AnnotationsService>("AnnotationsService").to(AnnotationsService).inSingletonScope();
+        container.bind<Brapiv1callsService>("Brapiv1callsService").to(Brapiv1callsService).inSingletonScope();
+        container.bind<Brapiv1studiesService>("Brapiv1studiesService").to(Brapiv1studiesService).inSingletonScope();
+        container.bind<Brapiv1studiesSearchService>("Brapiv1studiesSearchService").to(Brapiv1studiesSearchService).inSingletonScope();
+        container.bind<Brapiv1tokenService>("Brapiv1tokenService").to(Brapiv1tokenService).inSingletonScope();
+        container.bind<Brapiv1traitsService>("Brapiv1traitsService").to(Brapiv1traitsService).inSingletonScope();
+        container.bind<Brapiv1variablesService>("Brapiv1variablesService").to(Brapiv1variablesService).inSingletonScope();
+        container.bind<DataService>("DataService").to(DataService).inSingletonScope();
+        container.bind<DatasetsService>("DatasetsService").to(DatasetsService).inSingletonScope();
+        container.bind<DocumentsService>("DocumentsService").to(DocumentsService).inSingletonScope();
+        container.bind<EnvironmentsService>("EnvironmentsService").to(EnvironmentsService).inSingletonScope();
+        container.bind<EventsService>("EventsService").to(EventsService).inSingletonScope();
+        container.bind<ExperimentsService>("ExperimentsService").to(ExperimentsService).inSingletonScope();
+        container.bind<GroupService>("GroupService").to(GroupService).inSingletonScope();
+        container.bind<ImagesService>("ImagesService").to(ImagesService).inSingletonScope();
+        container.bind<InfrastructuresService>("InfrastructuresService").to(InfrastructuresService).inSingletonScope();
+        container.bind<LayersService>("LayersService").to(LayersService).inSingletonScope();
+        container.bind<MethodsService>("MethodsService").to(MethodsService).inSingletonScope();
+        container.bind<ProjectsService>("ProjectsService").to(ProjectsService).inSingletonScope();
+        container.bind<ProvenancesService>("ProvenancesService").to(ProvenancesService).inSingletonScope();
+        container.bind<RadiometricTargetsService>("RadiometricTargetsService").to(RadiometricTargetsService).inSingletonScope();
+        container.bind<ScientificObjectsService>("ScientificObjectsService").to(ScientificObjectsService).inSingletonScope();
+        container.bind<SensorsService>("SensorsService").to(SensorsService).inSingletonScope();
+        container.bind<SpeciesService>("SpeciesService").to(SpeciesService).inSingletonScope();
+        container.bind<TraitsService>("TraitsService").to(TraitsService).inSingletonScope();
+        container.bind<TripletsService>("TripletsService").to(TripletsService).inSingletonScope();
+        container.bind<UnitsService>("UnitsService").to(UnitsService).inSingletonScope();
+        container.bind<UriService>("UriService").to(UriService).inSingletonScope();
+        container.bind<UserService>("UserService").to(UserService).inSingletonScope();
+        container.bind<VariablesService>("VariablesService").to(VariablesService).inSingletonScope();
+        container.bind<VectorsService>("VectorsService").to(VectorsService).inSingletonScope();
+        container.bind<VocabulariesService>("VocabulariesService").to(VocabulariesService).inSingletonScope();
+    }
+}

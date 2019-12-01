@@ -9,7 +9,7 @@ package opensilex.service.resources.brapi;
 import javax.ws.rs.core.Response;
 import static junit.framework.TestCase.assertEquals;
 import org.junit.Test;
-import test.integration.opensilex.server.rest.RestApplicationTest;
+import integration.opensilex.server.rest.RestApplicationTest;
 
 /**
  * Tests for the BrAPI Call service
