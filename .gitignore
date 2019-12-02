@@ -55,4 +55,5 @@ phis2-ws/src/main/profiles/dev/config\.properties
 
 phis2-ws/nb-configuration\.xml
 
-phis2-ws/site/**
+**/front/dist
+**/front/src/lib
