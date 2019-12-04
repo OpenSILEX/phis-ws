@@ -13,6 +13,8 @@ import java.util.List;
 import java.util.Map;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
+
+import org.apache.commons.lang3.StringUtils;
 import org.apache.jena.arq.querybuilder.UpdateBuilder;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
@@ -42,6 +44,7 @@ import opensilex.service.authentication.TokenManager;
 import opensilex.service.configuration.DateFormat;
 import opensilex.service.configuration.DefaultBrapiPaginationValues;
 import opensilex.service.configuration.URINamespaces;
+import opensilex.service.dao.UserDAO;
 import opensilex.service.dao.exception.DAOPersistenceException;
 import opensilex.service.documentation.StatusCodeMsg;
 import opensilex.service.model.User;
@@ -593,6 +596,65 @@ public abstract class Rdf4jDAO<T> extends DAO<T> {
         }
         
         return labels;
+    }
+    
+    /**
+     * Delete a list of objects into the TripleStore. 
+     * @param uris : a {@link List} of objects URI
+     * @throws RepositoryException
+     * @throws UpdateExecutionException
+     */
+    protected void deleteAll(List<String> uris) throws RepositoryException, UpdateExecutionException {
+    	
+    }
+    
+    /**
+     * Delete a list of objects into the TripleStore. 
+     * @param uris : the list of URI to delete
+     * @throws IllegalArgumentException if the {@link #user} is not an Admin user or if a given URI is not present 
+     * into the TripleStore. 
+     * @throws DAOPersistenceException : if an {@link Exception} related to the {@link Repository} is encountered. 
+     * @throws Exception : for any other encountered {@link Exception}
+     * @see #deleteAll(List)
+     * @see UserDAO#isAdmin(User)
+     */
+    public void checkAndDeleteAll(List<String> uris) throws IllegalArgumentException, DAOPersistenceException, Exception { 	
+    	
+    	if(user == null || StringUtils.isEmpty(user.getAdmin())) {
+    		throw new IllegalArgumentException("No user/bad user provided");
+    	}
+    	if(! new UserDAO().isAdmin(user)) { // the user is not an admin
+    		throw new IllegalArgumentException("Error : only an admin user can delete an object");
+    	}
+    	
+    	StringBuilder errorMsgs = new StringBuilder();
+    	boolean allUriExists = true;   	
+		for(String uri : uris) { 
+			if(! existUri(uri)) {
+				errorMsgs.append(uri+" , ");
+				allUriExists = false;
+			}
+    	}
+    	if(!allUriExists) {
+    		throw new IllegalArgumentException(errorMsgs.append(" don't belongs to the TripleStore").toString());
+    	}
+    	
+    	Exception returnedException = null;
+		try {
+			startTransaction();    			
+			deleteAll(uris);
+	    	commitTransaction();		    	
+		} catch (RepositoryException | UpdateExecutionException e) {
+			rollbackTransaction();
+			returnedException =  new DAOPersistenceException(e);
+		} catch(Exception e) {
+			rollbackTransaction();
+			returnedException = e;
+		}
+		finally {
+		 	if(returnedException != null)
+		 		throw returnedException;
+		 }
     }
 
     @Override
