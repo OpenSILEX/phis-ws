@@ -41,20 +41,19 @@ public class AnnotationDAOTest extends Rdf4jDAOTest {
 	private static AnnotationDAO annotationDao;
 	private static List<Event> events;
 	private static ScientificObject so;
+	private static String userUri;
 
 	@BeforeAll
 	public static void setup() throws DAOPersistenceException, Exception {
+		
+		UserDAO userDao = new UserDAO();
+		userUri = "http://www.opensilex.org/demo/id/agent/admin_phis"; 
+		
 		annotationDao =  new AnnotationDAO(userDao.findById(userUri));
 		initDaoWithInMemoryStoreConnection(annotationDao);
 		events = new LinkedList<>();
 	}
 		
-	@Override
-	protected Rdf4jDAO<?> getDao() {
-		return annotationDao;
-	}
-	
-	
 	@BeforeEach
 	protected void initDao() throws DAOPersistenceException, Exception {
 		
@@ -62,7 +61,9 @@ public class AnnotationDAOTest extends Rdf4jDAOTest {
 		Experiment xp = createAndGetExperiment(createdProject);
 		so = createAndGetScientificObject(xp);
 		events.clear();
-		events.add(createAndGetEvent(so.getUri()));
+		
+		ArrayList<String> concernedUris = new ArrayList<>(Arrays.asList(so.getUri()));
+		events.add(createAndGetEvent(concernedUris));
 	}
 	
 	
@@ -73,8 +74,11 @@ public class AnnotationDAOTest extends Rdf4jDAOTest {
 	void test_delete_annotation() throws DAOPersistenceException, Exception {
 		
 		long initialSize = annotationDao.getConnection().size();	
-		Annotation a = createAndGetAnnotation(events.get(0).getUri());
+		
+		ArrayList<String> annotatedEventUris = new ArrayList<>(Arrays.asList(events.get(0).getUri()));		
+		Annotation a = createAndGetAnnotation(annotatedEventUris,userUri);
 		annotationDao.delete(Arrays.asList(a));
+		
 		assertEquals(annotationDao.getConnection().size(), initialSize);  
 		assertFalse(annotationDao.existUri(a.getUri()));
 	}
@@ -87,14 +91,16 @@ public class AnnotationDAOTest extends Rdf4jDAOTest {
 		
 		long initialSize = annotationDao.getConnection().size();
 
-		Annotation a  = createAndGetAnnotation(events.get(0).getUri());		
-		Annotation a1 = createAndGetAnnotation(a.getUri()); // create annotation on the last created annotation
+		ArrayList<String> annotatedEventUris = new ArrayList<>(Arrays.asList(events.get(0).getUri()));		
+		Annotation a  = createAndGetAnnotation(annotatedEventUris,userUri);		
+		
+		ArrayList<String> annotationUris = new ArrayList<>(Arrays.asList(a.getUri()));
+		Annotation a1 = createAndGetAnnotation(annotationUris,userUri); // create annotation on the last created annotation
 		
 		annotationDao.delete(Arrays.asList(a));
 		assertEquals(annotationDao.getConnection().size(), initialSize);  
 		assertFalse(annotationDao.existUri(a.getUri()));
 		assertFalse(annotationDao.existUri(a1.getUri()));
-
 	}
 	
 	@Test
@@ -112,16 +118,25 @@ public class AnnotationDAOTest extends Rdf4jDAOTest {
 		int k = 2;
 		String userUri = "http://www.opensilex.org/demo/id/agent/admin_phis";
 		
-		Annotation a = new Annotation(null,DateTime.now(),userUri,Arrays.asList("annotate an event"),
-				Oa.INSTANCE_DESCRIBING.toString(),Arrays.asList(events.get(0).getUri()));		
+		ArrayList<String> bodyValues = new ArrayList<>();
+		bodyValues.add("annotate an event");
+		ArrayList<String> targets = new ArrayList<>();
+		targets.add(events.get(0).getUri());
+		
+		Annotation a = new Annotation(null,DateTime.now(),userUri,bodyValues,Oa.INSTANCE_DESCRIBING.toString(),targets);		
 		
 		List<Annotation> annotationList = new ArrayList<>();
 		annotationList.addAll(annotationDao.create(Arrays.asList(a))); // create the first annotation A and add it
 		
 		int nbTripleCreated = 6;
 		for(int i=1;i<k+1;i++) {
-			Annotation ai = new Annotation(null,DateTime.now(),userUri,Arrays.asList("annotate an annotation "+i),
-					Oa.INSTANCE_DESCRIBING.toString(),Arrays.asList(annotationList.get(i-1).getUri()));			
+			
+			bodyValues.clear();
+			bodyValues.add("annotate an annotation "+i);			
+			targets.clear();
+			targets.add(annotationList.get(i-1).getUri());
+			
+			Annotation ai = new Annotation(null,DateTime.now(),userUri,bodyValues,Oa.INSTANCE_DESCRIBING.toString(),targets);			
 			annotationList.addAll(annotationDao.create(Arrays.asList(ai))); // add the created annotation to the list
 			nbTripleCreated += 6;
 			assertEquals(annotationDao.getConnection().size(), initialSize+nbTripleCreated); // we should have delete 6 triples for each k annotation	
@@ -139,10 +154,14 @@ public class AnnotationDAOTest extends Rdf4jDAOTest {
 	 */
 	void test_delete_annotation_with_one_super_annotation_with_another_target() throws DAOPersistenceException, Exception {
 		
-		Annotation a = createAndGetAnnotation(events.get(0).getUri());
-		events.add(createAndGetEvent(so.getUri())); // create a new event 
+		ArrayList<String> annotatedEventUris = new ArrayList<>(Arrays.asList(events.get(0).getUri()));
+		Annotation a = createAndGetAnnotation(annotatedEventUris,userUri);
 		
-		Annotation a1 = createAndGetAnnotation(a.getUri(),events.get(1).getUri());
+		ArrayList<String> concernedUris = new ArrayList<>(Arrays.asList(so.getUri()));
+		events.add(createAndGetEvent(concernedUris)); // create a new event 
+		
+		ArrayList<String> annotationsUris = new ArrayList<>(Arrays.asList(a.getUri(),events.get(1).getUri())); // annotation on a another annotation and on an event
+		Annotation a1 = createAndGetAnnotation(annotationsUris,userUri);
 		
 		annotationDao.delete(Arrays.asList(a));
 		assertFalse(annotationDao.existUri(a.getUri()));
