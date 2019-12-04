@@ -163,7 +163,15 @@ public abstract class Rdf4jDAO<T> extends DAO<T> {
         }
     }
 
+    /**
+     * 
+     * @return the {@link RepositoryConnection} used by the DAO. 
+     * Initialize the connection if not done yet.
+     * see {@link #initConnection()}. 
+     */
     public RepositoryConnection getConnection() {
+    	if(connection == null || ! connection.isOpen())
+    		initConnection();
         return connection;
     }
 
@@ -588,27 +596,33 @@ public abstract class Rdf4jDAO<T> extends DAO<T> {
     }
 
     @Override
-    protected void initConnection() {
-        getConnection().begin();    
+    protected void initConnection() {  
+    	if(connection == null || ! connection.isOpen()) 
+    		connection = rep.getConnection();
     }
 
     @Override
     protected void closeConnection() {
-        getConnection().close();
+        if(connection != null && connection.isOpen())
+            connection.close();
     }
 
     @Override
     protected void startTransaction() {
-        // transactions starts automatically in SPARQL.
+    	initConnection(); // init the connection if not done
+    	if(! connection.isActive())
+    		connection.begin();
     }
 
     @Override
     protected void commitTransaction() {
-        getConnection().commit();
+        if(connection != null && connection.isActive())
+            connection.commit();
     }
 
     @Override
     protected void rollbackTransaction() {
-        getConnection().rollback();
+        if(connection != null && connection.isActive())
+            connection.rollback();
     }
 }
