@@ -25,6 +25,23 @@ public abstract class DAO<T> {
      */
     public String remoteUserAdress;
     public User user;
+    
+    
+    public String getRemoteUserAdress() {
+		return remoteUserAdress;
+	}
+
+	public void setRemoteUserAdress(String remoteUserAdress) {
+		this.remoteUserAdress = remoteUserAdress;
+	}
+
+	public User getUser() {
+		return user;
+	}
+
+	public void setUser(User user) {
+		this.user = user;
+	}
 
     /**
      * Creates in the storage the list of objects given.
