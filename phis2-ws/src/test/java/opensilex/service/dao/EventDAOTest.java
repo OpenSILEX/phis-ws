@@ -11,7 +11,6 @@ package opensilex.service.dao;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -58,8 +57,7 @@ class EventDAOTest extends Rdf4jDAOTest{
 		
 		long initialSize = eventDao.getConnection().size();
 		
-		ArrayList<String> concernedUris = new ArrayList<>(Arrays.asList(so.getUri()));
-		Event event = createAndGetEvent(concernedUris); // create one event on one ScientificObject		
+		Event event = createAndGetEvent(so.getUri()); // create one event on one ScientificObject		
 		eventDao.delete(Arrays.asList(event));
 		
 		assertEquals(initialSize,eventDao.getConnection().size());
@@ -72,9 +70,9 @@ class EventDAOTest extends Rdf4jDAOTest{
 	void test_delete_event_on_multiple_scientific_object() throws DAOPersistenceException, Exception {
 		
 		int k = 3;
-		ArrayList<String> soUris = new ArrayList<>(k);
+		String[] soUris = new String[k];
 		for(int i=0;i<k;i++) {
-			soUris.add(createAndGetScientificObject(xp).getUri());
+			soUris[i] = createAndGetScientificObject(xp).getUri();
 		}	
 		long initialSize = eventDao.getConnection().size();
 		
@@ -94,11 +92,9 @@ class EventDAOTest extends Rdf4jDAOTest{
 		
 		long initialSize = eventDao.getConnection().size();
 		
-		ArrayList<String> concernedUris = new ArrayList<>(Arrays.asList(so.getUri()));
-		Event event = createAndGetEvent(concernedUris); // create one event on one ScientificObject
+		Event event = createAndGetEvent(so.getUri()); // create one event on one ScientificObject
 		
-		ArrayList<String> eventUris = new ArrayList<>(Arrays.asList(event.getUri()));
-		Annotation a = createAndGetAnnotation(eventUris,userUri);
+		Annotation a = createAndGetAnnotation(userUri,event.getUri());
 		eventDao.delete(Arrays.asList(event));
 		
 		assertFalse(eventDao.existUri(event.getUri()));
@@ -112,13 +108,10 @@ class EventDAOTest extends Rdf4jDAOTest{
 		
 		long initialSize = eventDao.getConnection().size();
 		
-		ArrayList<String> concernedUris = new ArrayList<>(Arrays.asList(so.getUri()));
-		Event event = createAndGetEvent(concernedUris); // create one event on one ScientificObject
-		Event event1 = createAndGetEvent(concernedUris);
+		Event event = createAndGetEvent(so.getUri()); // create one event on one ScientificObject
+		Event event1 = createAndGetEvent(so.getUri());
 		
-		ArrayList<String> eventUris = new ArrayList<>(Arrays.asList(event.getUri(),event1.getUri()));
-
-		Annotation a = createAndGetAnnotation(eventUris,userUri); // delete the first event, the annotation should not be removed
+		Annotation a = createAndGetAnnotation(userUri,event.getUri(),event1.getUri()); // delete the first event, the annotation should not be removed
 		eventDao.delete(Arrays.asList(event));
 		
 		assertFalse(eventDao.existUri(event.getUri()));
