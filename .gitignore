@@ -57,3 +57,5 @@ phis2-ws/nb-configuration\.xml
 
 **/front/dist
 **/front/src/lib
+**/front/node_modules
+**/front/types
