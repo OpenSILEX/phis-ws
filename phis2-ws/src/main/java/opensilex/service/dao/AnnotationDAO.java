@@ -516,68 +516,74 @@ public class AnnotationDAO extends Rdf4jDAO<Annotation> {
      * @return an {@link UpdateBuilder} producing a SPARQL query which remove all annotation having only 
      * the given annotation as target. 
      * @example 
-     * DELETE { ?s ?p ?o . } WHERE { 
-     *     ?s oa:hasTarget+ "http://www.phenome-fppn.fr/test/id/annotation/1e331ca4-2e63-4728-8373-050a2b51c3dc". <br>
-     *     ?s ?p ?o  
-     *     MINUS { 
-     *     	  ?s oa:hasTarget ?s2, ?s3 . 
+     * <pre>
+     * DELETE { ?src_a ?src_a_pred ?src_a_obj . } 
+     * WHERE { 
+     *     ?src_a oa:hasTarget+ "http://www.phenome-fppn.fr/test/id/annotation/1e331ca4-2e63-4728-8373-050a2b51c3dc". 
+     *     ?src_a ?src_a_pred ?src_a_obj
+     * 	   MINUS { 
+     *     	  ?src_a oa:hasTarget ?s2, ?s3 . 
      *     	  FILTER( ?s2 != ?s3) 
      * 	  } 
      * } 
-     * @param annotationUri 
+     * </pre>
+     * @param annotationUri : the annotation on which we check if there exist an another annotation
      * @throws RepositoryException
      * @throws UpdateExecutionException
      */
      protected UpdateBuilder getRemoveAllSuperAnnotationQuery(String annotationUri) throws RepositoryException, UpdateExecutionException {
      	  	
-     	// create variables and annotation resource
-     	Node s = NodeFactory.createVariable("s"), s2 = NodeFactory.createVariable("s2"), s3 = NodeFactory.createVariable("s3"),
-     		 p = NodeFactory.createVariable("p"),  o = NodeFactory.createVariable("o"),
-     		 oaTargetPred = NodeFactory.createURI(Oa.RELATION_HAS_TARGET.toString()),
-     		 annotationNode = NodeFactory.createURI(annotationUri);
+     	Node srcAnnotation = NodeFactory.createVariable("src_a"), 
+     		srcAnnotationTarget = NodeFactory.createVariable("src_a_target"), 
+     		srcAnnotationTarget2 = NodeFactory.createVariable("src_a_target2"),
+     		srcAnnotationPredicate = NodeFactory.createVariable("src_a_pred"),  
+     		srcAnnotationObject = NodeFactory.createVariable("src_a_obj"),
+     		oaTargetPred = NodeFactory.createURI(Oa.RELATION_HAS_TARGET.toString()),
+     		targetAnnotation = NodeFactory.createURI(annotationUri);
      	
      	Path oaTargetPath = PathFactory.pathOneOrMore1(PathFactory.pathLink(oaTargetPred)); // create the property path (oa:target)+ 	
      	
-     	return new UpdateBuilder() // build the query
-     	   .addDelete(s, p, o) 
- 		   .addWhere(new TriplePath(s, oaTargetPath, annotationNode) )// add the two WHERE basic graph pattern ( b.g.p.) 
- 		   .addWhere(s, p, o)
+     	return new UpdateBuilder() 
+     	   .addDelete(srcAnnotation, srcAnnotationPredicate, srcAnnotationObject) 
+ 		   .addWhere(new TriplePath(srcAnnotation, oaTargetPath, targetAnnotation) )
+ 		   .addWhere(srcAnnotation, srcAnnotationPredicate, srcAnnotationObject)
  		   .addMinus(new WhereBuilder() // add the minus clause in order to check if the annotation has more than one target 
- 		   .addWhere(s, oaTargetPred, s2)
- 		   .addWhere(s, oaTargetPred, s3)
- 		   .addFilter(new ExprFactory().ne(s2, s3)) // create ?s2 != ?s3, 
+			   .addWhere(srcAnnotation, oaTargetPred, srcAnnotationTarget)
+			   .addWhere(srcAnnotation, oaTargetPred, srcAnnotationTarget2)
+			   .addFilter(new ExprFactory().ne(srcAnnotationTarget, srcAnnotationTarget2)) 
  		);    
      }
      
      /**
-      * @return an {@link UpdateBuilder} producing a SPARQL query which remove all annotation triples
+      * @return an {@link UpdateBuilder} producing a SPARQL query which remove all incoming and outcoming 
+      * annotation triples
       * @example 
+      * <pre>
       * DELETE { 
       * 		http://www.phenome-fppn.fr/test/id/annotation/1e331ca4-2e63-4728-8373-050a2b51c3dc ?p ?o .  
       * 		?s ?p1 http://www.phenome-fppn.fr/test/id/annotation/1e331ca4-2e63-4728-8373-050a2b51c3dc   
       * } WHERE {  
       * 		{ http://www.phenome-fppn.fr/test/id/annotation/1e331ca4-2e63-4728-8373-050a2b51c3dc ?p ?o }  
-      * 		UNION  
+      *   UNION  
       * 		{?s ?p1 http://www.phenome-fppn.fr/test/id/annotation/1e331ca4-2e63-4728-8373-050a2b51c3dc }  
       * }  
-      * 
+      * </pre>
       * @param annotationUri : the URI of the {@link Annotation} to delete
+      * @throws RepositoryException 
       */
      protected UpdateBuilder getRemoveAllAnnotationTripleQuery(String annotationUri) throws RepositoryException {
      	
-     	// create variables and annotation resource
-     	Node  s = NodeFactory.createVariable("s"),
-     		  p = NodeFactory.createVariable("p"),
-     		  p2 = NodeFactory.createVariable("p2"),
-        		  o = NodeFactory.createVariable("o"), 
-        		  annotationNode = NodeFactory.createURI(annotationUri);
+     	Node subject = NodeFactory.createVariable("s"),
+     		 outPredicate = NodeFactory.createVariable("p_out"),
+     		 inPredicate = NodeFactory.createVariable("p_in"),
+     		 object = NodeFactory.createVariable("o"), 
+     		 annotation = NodeFactory.createURI(annotationUri);
      	
      	return new UpdateBuilder()
-     		.addDelete(annotationNode,p,o)
-     		.addDelete(s,p2,annotationNode)
-     		.addWhere(annotationNode, p, o) // add the <s,p,annotation_uri> UNION <annotation_uri,p,o>
- 			.addUnion(new WhereBuilder().addWhere(s,p2,annotationNode)
- 		);   		
+     		.addDelete(annotation,outPredicate,object)
+     		.addDelete(subject,inPredicate,annotation)
+     		.addWhere(annotation, outPredicate, object) 
+ 			.addUnion(new WhereBuilder().addWhere(subject,inPredicate,annotation));   		
      }
      
      /**
@@ -588,12 +594,16 @@ public class AnnotationDAO extends Rdf4jDAO<Annotation> {
      protected void deleteAll(List<String> annotationUris) throws RepositoryException, UpdateExecutionException {
      	    	
     	RepositoryConnection conn = getConnection();
-     	for(String uri : annotationUris) {   		
+    	
+     	for(String uri : annotationUris) {  
+     		
      		String removeIncomingsAnnotationQuery = getRemoveAllSuperAnnotationQuery(uri).buildRequest().toString(); 
      		String removeAnnotationQuery = getRemoveAllAnnotationTripleQuery(uri).buildRequest().toString(); 
      		
+     		// first delete all annotation which has the annotationUri as target  
      		Update update = conn.prepareUpdate(QueryLanguage.SPARQL,removeIncomingsAnnotationQuery); 
-     		update.execute(); // first delete all annotation which has the annotationUri as target  
+     		update.execute(); 
+     		// then delete the annotation itself
      		update = conn.prepareUpdate(QueryLanguage.SPARQL,removeAnnotationQuery); 
      		update.execute(); // then delete the annotation itself
      	}	
@@ -602,7 +612,9 @@ public class AnnotationDAO extends Rdf4jDAO<Annotation> {
      @Override
      public void delete(List<Annotation> annotations) throws DAOPersistenceException, Exception, IllegalAccessException, IllegalAccessException { 
      	
-     	ArrayList<String> uris = annotations.stream().map(annotation -> annotation.getUri()) // get all annotation URIs into an ArrayList via Stream API
+    	// get all annotation URIs into an ArrayList via Stream API
+     	ArrayList<String> uris = annotations.stream()
+     			.map(annotation -> annotation.getUri()) 
  				.collect(Collectors.toCollection(ArrayList::new));
      	checkAndDeleteAll(uris);
      }
