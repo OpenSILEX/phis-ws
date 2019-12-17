@@ -12,9 +12,14 @@ import java.util.HashMap;
 import java.util.List;
 import opensilex.service.dao.exception.DAODataErrorAggregateException;
 import opensilex.service.dao.exception.DAOPersistenceException;
+
+import opensilex.service.model.User;
+import org.apache.jena.arq.querybuilder.SelectBuilder;
 import org.apache.jena.arq.querybuilder.UpdateBuilder;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
+import org.apache.jena.query.Query;
+import org.apache.jena.query.SortCondition;
 import org.apache.jena.rdf.model.Literal;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
@@ -57,7 +62,11 @@ public class RadiometricTargetDAO extends Rdf4jDAO<RadiometricTarget> {
     //The following params are used to search in the triplestore
     public String rdfType;
     public String label;
-    
+
+    public RadiometricTargetDAO(User user) { super(user); }
+
+    public RadiometricTargetDAO() { super(); }
+
     /**
      * Generates the query to get the uri and the label of the radiometric targets
      * @example
@@ -586,35 +595,47 @@ public class RadiometricTargetDAO extends Rdf4jDAO<RadiometricTarget> {
     }
     
     /**
-     * Prepares a query to get the higher id of the radiometric targets.
-     * @example 
-     * SELECT ?uri WHERE {
-     *      ?uri  <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.opensilex.org/vocabulary/oeso#RadiometricTarget> . 
+     * Prepares a query to get the highest id of the radiometric targets.
+     * @example
+     *
+     * <pre>
+     * PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+     * PREFIX oeso: <http://www.opensilex.org/vocabulary/oeso#>
+     * 
+     * SELECT ?uri FROM { <http://www.phenome-fppn.fr/test/> } WHERE {
+     *      ?uri  rdf:type oeso:RadiometricTarget .     
      * }
      * ORDER BY DESC(?uri) 
+     * 
+     * </pre>
+     * @param graph : the graph context of the radiometric target set
      * @return the query
      */
-    private SPARQLQueryBuilder prepareGetLastId() {
-        SPARQLQueryBuilder query = new SPARQLQueryBuilder();
+    private SelectBuilder prepareGetLastId(String graph) {
+    	
+    	Node uriVar = NodeFactory.createVariable(URI); 
+        Node radiometricTargetConcept = NodeFactory.createURI(Oeso.CONCEPT_RADIOMETRIC_TARGET.toString());
+        Node graphNode = NodeFactory.createURI(graph);
         
-        query.appendSelect("?" + URI);
-        query.appendTriplet("?" + URI, Rdf.RELATION_TYPE.toString(), Oeso.CONCEPT_RADIOMETRIC_TARGET.toString(), null);
-        query.appendOrderBy("DESC(?" + URI + ")");
-        query.appendLimit(1);
-        
-        LOGGER.debug(SPARQL_QUERY + query.toString());
-        
-        return query;
+    	SelectBuilder queryBuilder = new SelectBuilder()
+			.addGraph(graphNode, uriVar, RDF.type, radiometricTargetConcept)
+			.addOrderBy(new SortCondition(uriVar, Query.ORDER_DESCENDING))
+			.setLimit(1);
+    	
+        LOGGER.debug(SPARQL_QUERY + queryBuilder.toString());       
+        return queryBuilder;
     }
     
     /**
      * Gets the higher id of the radiometric targets.
+     * @param graph : uri of the context graph 
      * @return the id
      */
-    public int getLastId() {
-        SPARQLQueryBuilder query = prepareGetLastId();
-        //get last unit uri inserted
-        TupleQuery tupleQuery = this.getConnection().prepareTupleQuery(QueryLanguage.SPARQL, query.toString());
+    public int getLastId(String graph) {
+    	
+    	SelectBuilder query = prepareGetLastId(graph);
+
+    	TupleQuery tupleQuery = this.getConnection().prepareTupleQuery(QueryLanguage.SPARQL, query.toString());
         TupleQueryResult result = tupleQuery.evaluate();
         
         String uri = null;
