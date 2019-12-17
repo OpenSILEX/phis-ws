@@ -527,55 +527,34 @@ public class UriGenerator {
     /**
      * Generates a new annotation URI. A unit annotation follows the pattern:
      * <prefix>:id/annotation/<unic_code>
-     * <unic_code> = 1 letter type + java.util.UUID.randomUUID(); 
-     * @example http://www.phenome-fppn.fr/diaphen/id/annotation/e073961b-e766-4493-b98f-74a8b2846893
+     * <unic_code> = 1 letter type + {@link UUID#randomUUID()}+_+{@link System#nanoTime()}
+     * @example http://www.phenome-fppn.fr/diaphen/id/annotation/e073961b-e766-4493-b98f-74a8b2846893_295073540722571
      * @return the new annotation URI
      */
     private static String generateAnnotationUri() {
-        //1. check if URI already exists
-        AnnotationDAO annotationDao = new AnnotationDAO();
-        String newAnnotationUri = PLATFORM_URI_ID_ANNOTATION + UUID.randomUUID();
-        while (annotationDao.existUri(newAnnotationUri)) {
-            newAnnotationUri = PLATFORM_URI_ID_ANNOTATION + UUID.randomUUID();
-        }
-
-        return newAnnotationUri;
+        return PLATFORM_URI_ID_ANNOTATION +UUID.randomUUID() +"_" +System.nanoTime();
     }
 
     /**
      * Generates a new event URI. an event URI follows the pattern:
      * <prefix>:id/event/<unic_code>
-     * <unic_code> = java.util.UUID.randomUUID();
-     * @example http://www.phenome-fppn.fr/diaphen/id/event/e073961b-e766-4493-b98f-74a8b2846893
+     * <unic_code> = {@link UUID#randomUUID()}+_+{@link System#nanoTime()}
+     * @example http://www.phenome-fppn.fr/diaphen/id/event/e073961b-e766-4493-b98f-74a8b2846893_295073540722571
      * @return the new event URI
      */
     private static String generateEventUri() {
-        // To check if URI already exists
-        EventDAO eventDao = new EventDAO(null);
-        String newEventUri = PLATFORM_URI_ID_EVENT + UUID.randomUUID();
-        while (eventDao.existUri(newEventUri)) {
-            newEventUri = PLATFORM_URI_ID_EVENT + UUID.randomUUID();
-        }
-
-        return newEventUri;
+        return  PLATFORM_URI_ID_EVENT +UUID.randomUUID() + "_" +System.nanoTime();
     }
 
     /**
      * Generates a new Instant URI. The URI follows the pattern:
      * <prefix>:id/instant/<unic_code>
-     * <unic_code> = java.util.UUID.randomUUID();
-     * @example http://www.phenome-fppn.fr/diaphen/id/instant/e073961b-e766-4493-b98f-74a8b2846893
+     * <unic_code> = {@link UUID#randomUUID()}+_+{@link System#nanoTime()};
+     * @example http://www.phenome-fppn.fr/diaphen/id/instant/e073961b-e766-4493-b98f-74a8b2846893_295073540722571
      * @return the new URI
      */
     private static String generateInstantUri() {
-        // To check if the URI already exists
-        EventDAO timeDao = new EventDAO(null);
-        String newInstantUri = PLATFORM_URI_ID_INSTANT + UUID.randomUUID();
-        while (timeDao.existUri(newInstantUri)) {
-            newInstantUri = PLATFORM_URI_ID_INSTANT + UUID.randomUUID();
-        }
-
-        return newInstantUri;
+        return  PLATFORM_URI_ID_INSTANT +UUID.randomUUID() +"_" +System.nanoTime();
     }
 
     /**
