@@ -72,7 +72,9 @@ public abstract class Rdf4jDAOTest {
 	
 	@AfterEach
 	public void cleanStore() {
-		assert(memoryRepository != null);		
+		if(memoryRepository == null)
+			return;
+
 		RepositoryConnection conn = memoryRepository.getConnection(); 
 		if(conn != null && conn.isOpen()) {
 			long size = conn.size();
