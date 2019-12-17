@@ -313,6 +313,12 @@ public class AnnotationResourceService extends ResourceService {
     })
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
+    /**
+     * Delete each {@link Annotation} URI from {@link DeleteDTO#getUris()}
+     * @param deleteDTO : the DTO which contains the list of Annotation URI to delete
+     * @param context
+     * @return
+     */
     public Response deleteAnnotationByUri( 
     		@ApiParam(
 		        value = DocumentationAnnotation.ANNOTATION_URI_DEFINITION,

@@ -534,12 +534,12 @@ public class AnnotationDAO extends Rdf4jDAO<Annotation> {
      protected UpdateBuilder getRemoveAllSuperAnnotationQuery(String annotationUri) throws RepositoryException, UpdateExecutionException {
      	  	
      	Node srcAnnotation = NodeFactory.createVariable("src_a"), 
-     		srcAnnotationTarget = NodeFactory.createVariable("src_a_target"), 
-     		srcAnnotationTarget2 = NodeFactory.createVariable("src_a_target2"),
-     		srcAnnotationPredicate = NodeFactory.createVariable("src_a_pred"),  
-     		srcAnnotationObject = NodeFactory.createVariable("src_a_obj"),
-     		oaTargetPred = NodeFactory.createURI(Oa.RELATION_HAS_TARGET.toString()),
-     		targetAnnotation = NodeFactory.createURI(annotationUri);
+     		 srcAnnotationTarget = NodeFactory.createVariable("src_a_target"), 
+     		 srcAnnotationTarget2 = NodeFactory.createVariable("src_a_target2"),
+     		 srcAnnotationPredicate = NodeFactory.createVariable("src_a_pred"),  
+     		 srcAnnotationObject = NodeFactory.createVariable("src_a_obj"),
+     		 oaTargetPred = NodeFactory.createURI(Oa.RELATION_HAS_TARGET.toString()),
+     		 targetAnnotation = NodeFactory.createURI(annotationUri);
      	
      	Path oaTargetPath = PathFactory.pathOneOrMore1(PathFactory.pathLink(oaTargetPred)); // create the property path (oa:target)+ 	
      	
@@ -547,7 +547,9 @@ public class AnnotationDAO extends Rdf4jDAO<Annotation> {
      	   .addDelete(srcAnnotation, srcAnnotationPredicate, srcAnnotationObject) 
  		   .addWhere(new TriplePath(srcAnnotation, oaTargetPath, targetAnnotation) )
  		   .addWhere(srcAnnotation, srcAnnotationPredicate, srcAnnotationObject)
- 		   .addMinus(new WhereBuilder() // add the minus clause in order to check if the annotation has more than one target 
+ 		   
+ 		   // add the minus clause in order to check if the annotation has more than one target 
+ 		   .addMinus(new WhereBuilder() 
 			   .addWhere(srcAnnotation, oaTargetPred, srcAnnotationTarget)
 			   .addWhere(srcAnnotation, oaTargetPred, srcAnnotationTarget2)
 			   .addFilter(new ExprFactory().ne(srcAnnotationTarget, srcAnnotationTarget2)) 
@@ -595,7 +597,7 @@ public class AnnotationDAO extends Rdf4jDAO<Annotation> {
      	    	
     	RepositoryConnection conn = getConnection();
     	
-     	for(String uri : annotationUris) {  
+     	for(String uri : annotationUris) {
      		
      		String removeIncomingsAnnotationQuery = getRemoveAllSuperAnnotationQuery(uri).buildRequest().toString(); 
      		String removeAnnotationQuery = getRemoveAllAnnotationTripleQuery(uri).buildRequest().toString(); 
@@ -605,7 +607,7 @@ public class AnnotationDAO extends Rdf4jDAO<Annotation> {
      		update.execute(); 
      		// then delete the annotation itself
      		update = conn.prepareUpdate(QueryLanguage.SPARQL,removeAnnotationQuery); 
-     		update.execute(); // then delete the annotation itself
+     		update.execute(); 
      	}	
      }
     
@@ -614,8 +616,8 @@ public class AnnotationDAO extends Rdf4jDAO<Annotation> {
      	
     	// get all annotation URIs into an ArrayList via Stream API
      	ArrayList<String> uris = annotations.stream()
-     			.map(annotation -> annotation.getUri()) 
- 				.collect(Collectors.toCollection(ArrayList::new));
+ 			.map(annotation -> annotation.getUri()) 
+			.collect(Collectors.toCollection(ArrayList::new));
      	checkAndDeleteAll(uris);
      }
 

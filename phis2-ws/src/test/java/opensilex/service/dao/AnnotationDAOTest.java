@@ -68,9 +68,10 @@ public class AnnotationDAOTest extends Rdf4jDAOTest {
 	
 	@Test
 	/**
-	 * Try to delete an annotation about one event 
+	 * Try to delete an annotation about one event .
+	 * So the event annotation should be deleted 
 	 */
-	void test_delete_annotation() throws DAOPersistenceException, Exception {
+	void testDeleteAnnotation() throws DAOPersistenceException, Exception {
 		
 		long initialSize = annotationDao.getConnection().size();	
 		
@@ -83,9 +84,10 @@ public class AnnotationDAOTest extends Rdf4jDAOTest {
 	
 	@Test
 	/**
-	 * Try to delete an annotation about one event. This annotation also have severals annotation.  
+	 * Try to delete an annotation about one event. This annotation also have severals annotation. 
+	 * So the event annotation should not be deleted 
 	 */
-	void test_delete_annotation_with_one_super_annotation() throws DAOPersistenceException, Exception {
+	void testDeleteAnnotation_with_one_super_annotation() throws DAOPersistenceException, Exception {
 		
 		long initialSize = annotationDao.getConnection().size();
 
@@ -104,9 +106,10 @@ public class AnnotationDAOTest extends Rdf4jDAOTest {
 	 * by a annotation a1 which also have an annotation.
 	 * A simple RDF representation would be 
 	 * <annotation1,oa:target,event_1>, <annotation2,oa:target,annotation1>, ... , <annotation_k,oa:target,annotation_k-1>
+	 *
 	 * 
 	 */
-	void test_delete_annotation_with_recursive_annotation_chain() throws DAOPersistenceException, Exception {
+	void testDeleteAnnotationWithRecursiveAnnotationChain() throws DAOPersistenceException, Exception {
 		
 		long initialSize = annotationDao.getConnection().size();
 
@@ -143,19 +146,21 @@ public class AnnotationDAOTest extends Rdf4jDAOTest {
 	
 	@Test
 	/**
-	 * @throws Exception 
-	 * @throws DAOPersistenceException 
+	 * Try to delete an annotation "a" on an event "e".
+	 * Then add an annotation a2 on "a" and on a scientific object "so". 
+	 * 
+	 * We delete a, so the relation between a and a2 must be deleted but a2 must still exists. 
 	 * 
 	 */
-	void test_delete_annotation_with_one_super_annotation_with_another_target() throws DAOPersistenceException, Exception {
+	void testDeleteAnnotationWithOneSuperAnnotationWithAnotherTarget() throws DAOPersistenceException, Exception {
 		
 		Annotation a = createAndGetAnnotation(userUri,events.get(0).getUri());
 		events.add(createAndGetEvent(so.getUri())); // create a new event 
-		Annotation a1 = createAndGetAnnotation(userUri,a.getUri(),events.get(1).getUri()); // annotation on a another annotation and on an event
+		Annotation a2 = createAndGetAnnotation(userUri,a.getUri(),events.get(1).getUri()); // annotation on a another annotation and on an event
 		
 		annotationDao.delete(Arrays.asList(a));
 		assertFalse(annotationDao.existUri(a.getUri()));
-		assertTrue(annotationDao.existUri(a1.getUri()));
+		assertTrue(annotationDao.existUri(a2.getUri()));
 
 	}
 

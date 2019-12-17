@@ -376,7 +376,7 @@ public abstract class ResourceService {
     /**
      * @param dao : a {@link Rdf4jDAO} used to delete a {@link List} of String URI.
      * @param deleteDTO : a {@link DeleteDTO} which contains a {@link List} of URI.  
-     * @param msg : delete msg 
+     * @param msg : delete message 
      * @return 
      */
     protected Response buildDeleteObjectsByUriResponse(Rdf4jDAO<?> dao, DeleteDTO deleteDTO, String msg) {

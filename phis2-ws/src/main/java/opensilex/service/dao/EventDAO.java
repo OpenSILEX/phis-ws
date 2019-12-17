@@ -765,7 +765,7 @@ public class EventDAO extends Rdf4jDAO<Event> {
   			.addWhere(eventNode,hasTimePred,time)
   			.addWhere(time,timePred,timeObj) 
   			.addUnion(
-  					new WhereBuilder().addWhere(subject,inPredicate,eventNode));  
+  				new WhereBuilder().addWhere(subject,inPredicate,eventNode));  
     }
 
     @Override

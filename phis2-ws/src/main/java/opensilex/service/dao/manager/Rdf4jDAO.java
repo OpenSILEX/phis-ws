@@ -14,6 +14,7 @@ import java.util.Map;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.jena.arq.querybuilder.UpdateBuilder;
 import org.apache.jena.graph.Node;
@@ -605,7 +606,7 @@ public abstract class Rdf4jDAO<T> extends DAO<T> {
      * @throws UpdateExecutionException
      */
     protected void deleteAll(List<String> uris) throws RepositoryException, UpdateExecutionException {
-    	
+    	throw new NotImplementedException("");
     }
     
     /**
@@ -613,17 +614,19 @@ public abstract class Rdf4jDAO<T> extends DAO<T> {
      * @param uris : the list of URI to delete
      * @throws IllegalArgumentException if the {@link #user} is not an Admin user or if a given URI is not present 
      * into the TripleStore. 
-     * @throws DAOPersistenceException : if an {@link Exception} related to the {@link Repository} is encountered. 
-     * @throws Exception : for any other encountered {@link Exception}
+     * 
+     * @throws Exception 
+     * 
      * @see #deleteAll(List)
      * @see UserDAO#isAdmin(User)
      */
-    public void checkAndDeleteAll(List<String> uris) throws IllegalArgumentException, DAOPersistenceException, Exception { 	
+    public void checkAndDeleteAll(List<String> uris) throws IllegalArgumentException, Exception { 	
     	
     	if(user == null || StringUtils.isEmpty(user.getAdmin())) {
     		throw new IllegalArgumentException("No user/bad user provided");
     	}
-    	if(! new UserDAO().isAdmin(user)) { // the user is not an admin
+    	// check if the user has the right to delete objects
+    	if(! new UserDAO().isAdmin(user)) { 
     		throw new IllegalArgumentException("Error : only an admin user can delete an object");
     	}
     	
@@ -639,22 +642,14 @@ public abstract class Rdf4jDAO<T> extends DAO<T> {
     		throw new IllegalArgumentException(errorMsgs.append(" don't belongs to the TripleStore").toString());
     	}
     	
-    	Exception returnedException = null;
-		try {
+    	try {
 			startTransaction();    			
 			deleteAll(uris);
 	    	commitTransaction();		    	
-		} catch (RepositoryException | UpdateExecutionException e) {
-			rollbackTransaction();
-			returnedException =  new DAOPersistenceException(e);
 		} catch(Exception e) {
 			rollbackTransaction();
-			returnedException = e;
+			throw e;
 		}
-		finally {
-		 	if(returnedException != null)
-		 		throw returnedException;
-		 }
     }
 
     @Override
@@ -671,7 +666,8 @@ public abstract class Rdf4jDAO<T> extends DAO<T> {
 
     @Override
     protected void startTransaction() {
-    	initConnection(); // init the connection if not done
+    	// initialize the connection if not done
+    	initConnection();
     	if(! connection.isActive())
     		connection.begin();
     }

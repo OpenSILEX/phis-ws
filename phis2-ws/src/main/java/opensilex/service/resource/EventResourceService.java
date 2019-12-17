@@ -476,9 +476,7 @@ public class EventResourceService  extends ResourceService {
     @Path("{uri}")
     @ApiOperation(
     	value = "Delete a list of event",
-    	notes = "Delete a list of event. Need URL encoded event URI"
-    	
-    		)
+    	notes = "Delete a list of event. Need URL encoded event URI")
     @ApiResponses(value = {
         @ApiResponse(code = 200, message = "Event(s) deleted", response = ResponseFormPOST.class), 
         @ApiResponse(code = 400, message = DocumentationAnnotation.BAD_USER_INFORMATION),
@@ -496,6 +494,12 @@ public class EventResourceService  extends ResourceService {
     })
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
+    /**
+     * Delete each {@link Event} URI from {@link DeleteDTO#getUris()}
+     * @param deleteDTO : the DTO which contains the list of Event URI to delete
+     * @param context
+     * @return
+     */
     public Response deleteEventUri( 
     		@ApiParam(
 		        value = DocumentationAnnotation.EVENT_URI_DEFINITION,
