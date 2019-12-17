@@ -468,6 +468,11 @@ public class UriGenerator {
     }
     
     /**
+     * Association between a platform graph context and the last radiometricTarget generated id into this graph. 
+     */
+    private static Map<String,Integer> radiometricTargetLastIdByPlatform = new HashMap<>();
+    
+    /**
      * Generates a new radiometric target URI. A radiometric target URI follows the pattern: 
      * <prefix>:id/radiometricTargets/<unic_code>
      * <unic_code> = 2 letters type (rt) + auto incremented number with 3 digits.
@@ -475,19 +480,23 @@ public class UriGenerator {
      * @return The new radiometric target URI
      */
     private static String generateRadiometricTargetUri() {
-        //1. Get the highest radiometric target id (i.e. the last inserted
-        //radiometric target)
-        RadiometricTargetDAO radiometricTargetDAO = new RadiometricTargetDAO();
-        int lastID = radiometricTargetDAO.getLastId();
-        
-        //2. Generate radiometric target URI
-        int newRadiometricTargetID = lastID + 1;
-        String radiometricTargetID = Integer.toString(newRadiometricTargetID);
-        
+    	
+        //1. Get the highest radiometric target id (i.e. the last inserted radiometric target)   	
+    	String platformGraph = Contexts.RADIOMETRIC_TARGETS.toString();     	
+    	if(! radiometricTargetLastIdByPlatform.containsKey(platformGraph)) {
+    		 RadiometricTargetDAO radiometricTargetDAO = new RadiometricTargetDAO();
+            radiometricTargetLastIdByPlatform.put(platformGraph,radiometricTargetDAO.getLastId(platformGraph));
+    	}
+    	
+    	//2. Generate radiometric target URI
+    	int radiometricTargetLastID = radiometricTargetLastIdByPlatform.get(platformGraph)+1;
+        String radiometricTargetID = Integer.toString(radiometricTargetLastID);    
         while (radiometricTargetID.length() < 3) {
             radiometricTargetID = "0" + radiometricTargetID;
         }
-        
+
+        // update the platform last radiometricId
+        radiometricTargetLastIdByPlatform.put(platformGraph,radiometricTargetLastID);
         return PLATFORM_URI_ID_RADIOMETRIC_TARGET + URI_CODE_RADIOMETRIC_TARGET + radiometricTargetID;
     }
 
