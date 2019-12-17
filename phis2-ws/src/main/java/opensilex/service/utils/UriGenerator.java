@@ -634,23 +634,29 @@ public class UriGenerator {
         
         return projectUri;
     }
-    
+
+    /**
+     * Association between an experiment campaign year and the last id generated during this year
+     */
+    private static Map<String,Integer> lastIdByCampaigns = new HashMap<>();
+
     /**
      * Generates a new experiment URI. An experiment URI follows this pattern:
      * <prefix>:<unic_code>
      * <unic_code> = infrastructure code + 4 digits year + auto increment digit (per year)
      * @example http://www.opensilex.org/demo/DMO2019-1
-     * @param campaign the year of the campaign of the experiment
+     * @param campaignYear : the year of the campaign of the experiment
      * @return the new URI
      */
-    private static String generateExperimentUri(String campaign) {
-        //1. Get the campaign last experiment URI
-        Integer campaignLastExperimentUri = (new ExperimentSQLDAO()).getCampaignLastExperimentUri(campaign);
-        //2. Generate the URI of the experiment
-        
-        Integer newExperimentNumber = campaignLastExperimentUri + 1;
-        
-        return PLATFORM_URI + PLATFORM_CODE + campaign + EXPERIMENT_URI_SEPARATOR + newExperimentNumber;
+    private static String generateExperimentUri(String campaignYear) {
+
+        // check if the campaign year is already registered in the local map
+        if(! lastIdByCampaigns.containsKey(campaignYear)) {
+            lastIdByCampaigns.put(campaignYear, new ExperimentSQLDAO().getCampaignLastExperimentUri(campaignYear));
+        }
+        Integer newExperimentNumber = lastIdByCampaigns.get(campaignYear) + 1;
+        lastIdByCampaigns.put(campaignYear, newExperimentNumber);
+        return PLATFORM_URI + PLATFORM_CODE + campaignYear + EXPERIMENT_URI_SEPARATOR + newExperimentNumber;
     }
     
     /**
