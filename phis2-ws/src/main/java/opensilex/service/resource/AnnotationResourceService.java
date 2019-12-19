@@ -19,6 +19,9 @@ import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -36,6 +39,7 @@ import opensilex.service.dao.exception.DAOPersistenceException;
 import opensilex.service.documentation.DocumentationAnnotation;
 import opensilex.service.documentation.StatusCodeMsg;
 import opensilex.service.view.brapi.form.ResponseFormPOST;
+import opensilex.service.resource.dto.DeleteDTO;
 import opensilex.service.resource.dto.annotation.AnnotationDTO;
 import opensilex.service.resource.dto.annotation.AnnotationPostDTO;
 import opensilex.service.resource.validation.interfaces.URL;
@@ -57,9 +61,9 @@ import org.slf4j.LoggerFactory;
 @Path("/annotations")
 public class AnnotationResourceService extends ResourceService {
     final static Logger LOGGER = LoggerFactory.getLogger(SensorResourceService.class);
-    
+
     public final static String EMPTY_ANNOTATION_LIST = "the annotation list to add is empty";
-    
+
     /**
      * Inserts the given annotations in the triplestore.
      * @param annotationsDtos annotationsDtos
@@ -82,36 +86,36 @@ public class AnnotationResourceService extends ResourceService {
     @POST
     @ApiOperation(value = "Post annotations", notes = "Register new annotations in the triplestore")
     @ApiResponses(value = {
-        @ApiResponse(code = 201, message = "Annotations saved", response = ResponseFormPOST.class),
-        @ApiResponse(code = 400, message = DocumentationAnnotation.BAD_USER_INFORMATION),
-        @ApiResponse(code = 401, message = DocumentationAnnotation.USER_NOT_AUTHORIZED),
-        @ApiResponse(code = 500, message = DocumentationAnnotation.ERROR_SEND_DATA)
+            @ApiResponse(code = 201, message = "Annotations saved", response = ResponseFormPOST.class),
+            @ApiResponse(code = 400, message = DocumentationAnnotation.BAD_USER_INFORMATION),
+            @ApiResponse(code = 401, message = DocumentationAnnotation.USER_NOT_AUTHORIZED),
+            @ApiResponse(code = 500, message = DocumentationAnnotation.ERROR_SEND_DATA)
     })
     @ApiImplicitParams({
-        @ApiImplicitParam(name = GlobalWebserviceValues.AUTHORIZATION, required = true,
-            dataType = GlobalWebserviceValues.DATA_TYPE_STRING, paramType = GlobalWebserviceValues.HEADER,
-            value = DocumentationAnnotation.ACCES_TOKEN,
-            example = GlobalWebserviceValues.AUTHENTICATION_SCHEME + " ")
+            @ApiImplicitParam(name = GlobalWebserviceValues.AUTHORIZATION, required = true,
+                    dataType = GlobalWebserviceValues.DATA_TYPE_STRING, paramType = GlobalWebserviceValues.HEADER,
+                    value = DocumentationAnnotation.ACCES_TOKEN,
+                    example = GlobalWebserviceValues.AUTHENTICATION_SCHEME + " ")
     })
     public Response post(
-        @ApiParam(value = DocumentationAnnotation.ANNOTATION_POST_DATA_DEFINITION) 
+            @ApiParam(value = DocumentationAnnotation.ANNOTATION_POST_DATA_DEFINITION)
             @Valid ArrayList<AnnotationPostDTO> annotationsDtos,
-        @Context HttpServletRequest context) {
-        
+            @Context HttpServletRequest context) {
+
         // Set DAO
         AnnotationDAO objectDao = new AnnotationDAO(userSession.getUser());
         if (context.getRemoteAddr() != null) {
             objectDao.remoteUserAdress = context.getRemoteAddr();
         }
-        
+
         return getPostResponse(objectDao, annotationsDtos, context.getRemoteAddr(), StatusCodeMsg.EMPTY_ANNOTATION_LIST);
     }
 
     /**
      * Searches annotations by URI, creator, comment, date of creation, target.
-     * @example { 
-     * "metadata": { 
-     *      "pagination": { 
+     * @example {
+     * "metadata": {
+     *      "pagination": {
      *          "pageSize": 20,
      *          "currentPage": 0,
      *          "totalCount": 297,
@@ -120,8 +124,8 @@ public class AnnotationResourceService extends ResourceService {
      *      "status": [],
      *      "datafiles": [] 
      *      },
-     *      "result": { 
-     *          "data": [ { 
+     *      "result": {
+     *          "data": [ {
      *              "uri": "http://www.phenome-fppn.fr/platform/id/annotation/8247af37-769c-495b-8e7e-78b1141176c2",
      *              "creator": "http://www.phenome-fppn.fr/diaphen/id/agent/arnaud_charleroy",
      *              "creationDate": "2018-06-22 14:54:42+0200",
@@ -143,16 +147,16 @@ public class AnnotationResourceService extends ResourceService {
     @ApiOperation(value = "Get all annotations corresponding to the search params given",
             notes = "Retrieve all annotations authorized for the user corresponding to the searched params given")
     @ApiResponses(value = {
-        @ApiResponse(code = 200, message = "Retrieve all annotations", response = AnnotationDTO.class, responseContainer = "List"),
-        @ApiResponse(code = 400, message = DocumentationAnnotation.BAD_USER_INFORMATION),
-        @ApiResponse(code = 401, message = DocumentationAnnotation.USER_NOT_AUTHORIZED),
-        @ApiResponse(code = 500, message = DocumentationAnnotation.ERROR_FETCH_DATA)
+            @ApiResponse(code = 200, message = "Retrieve all annotations", response = AnnotationDTO.class, responseContainer = "List"),
+            @ApiResponse(code = 400, message = DocumentationAnnotation.BAD_USER_INFORMATION),
+            @ApiResponse(code = 401, message = DocumentationAnnotation.USER_NOT_AUTHORIZED),
+            @ApiResponse(code = 500, message = DocumentationAnnotation.ERROR_FETCH_DATA)
     })
     @ApiImplicitParams({
-        @ApiImplicitParam(name = GlobalWebserviceValues.AUTHORIZATION, required = true,
-                dataType = GlobalWebserviceValues.DATA_TYPE_STRING, paramType = GlobalWebserviceValues.HEADER,
-                value = DocumentationAnnotation.ACCES_TOKEN,
-                example = GlobalWebserviceValues.AUTHENTICATION_SCHEME + " ")
+            @ApiImplicitParam(name = GlobalWebserviceValues.AUTHORIZATION, required = true,
+                    dataType = GlobalWebserviceValues.DATA_TYPE_STRING, paramType = GlobalWebserviceValues.HEADER,
+                    value = DocumentationAnnotation.ACCES_TOKEN,
+                    example = GlobalWebserviceValues.AUTHENTICATION_SCHEME + " ")
     })
     @Produces(MediaType.APPLICATION_JSON)
     public Response getAnnotationsBySearch(
@@ -168,8 +172,8 @@ public class AnnotationResourceService extends ResourceService {
         ArrayList<Annotation> annotations;
         try {
             annotations = annotationDao.find(uri, creator, target, bodyValue, motivatedBy, page, pageSize);
-        
-        // handle search exceptions
+
+            // handle search exceptions
         } catch (DAOPersistenceException ex) {
             LOGGER.error(ex.getMessage(), ex);
             return getResponseWhenPersistenceError(ex);
@@ -185,8 +189,8 @@ public class AnnotationResourceService extends ResourceService {
             try {
                 int totalCount = annotationDao.count(uri, creator, target, bodyValue, motivatedBy);
                 return getGETResponseWhenSuccess(annotations, pageSize, page, totalCount);
-                
-            // handle count exceptions
+
+                // handle count exceptions
             } catch (DAOPersistenceException ex) {
                 LOGGER.error(ex.getMessage(), ex);
                 return getResponseWhenPersistenceError(ex);
@@ -202,8 +206,8 @@ public class AnnotationResourceService extends ResourceService {
      * @example
      * {
      * "metadata": { "pagination": null, "status": [], "datafiles": [] },
-     * "result": { 
-     * "data": [ { 
+     * "result": {
+     * "data": [ {
      *   "uri": "http://www.phenome-fppn.fr/platform/id/annotation/8247af37-769c-495b-8e7e-78b1141176c2",
      *   "creator": "http://www.phenome-fppn.fr/diaphen/id/agent/arnaud_charleroy",
      *   "creationDate": "2018-06-22 14:54:42+0200",
@@ -222,58 +226,112 @@ public class AnnotationResourceService extends ResourceService {
     @ApiOperation(value = "Get a annotation",
             notes = "Retrieve a annotation. Need URL encoded annotation URI")
     @ApiResponses(value = {
-        @ApiResponse(
-                code = 200, 
-                message = "Retrieve a annotation", 
-                response = AnnotationDTO.class, 
-                responseContainer = "List"),
-        @ApiResponse(code = 400, message = DocumentationAnnotation.BAD_USER_INFORMATION),
-        @ApiResponse(code = 401, message = DocumentationAnnotation.USER_NOT_AUTHORIZED),
-        @ApiResponse(code = 500, message = DocumentationAnnotation.ERROR_FETCH_DATA)
+            @ApiResponse(
+                    code = 200,
+                    message = "Retrieve a annotation",
+                    response = AnnotationDTO.class,
+                    responseContainer = "List"),
+            @ApiResponse(code = 400, message = DocumentationAnnotation.BAD_USER_INFORMATION),
+            @ApiResponse(code = 401, message = DocumentationAnnotation.USER_NOT_AUTHORIZED),
+            @ApiResponse(code = 500, message = DocumentationAnnotation.ERROR_FETCH_DATA)
     })
     @ApiImplicitParams({
-        @ApiImplicitParam(name = GlobalWebserviceValues.AUTHORIZATION, required = true,
-                dataType = GlobalWebserviceValues.DATA_TYPE_STRING, paramType = GlobalWebserviceValues.HEADER,
-                value = DocumentationAnnotation.ACCES_TOKEN,
-                example = GlobalWebserviceValues.AUTHENTICATION_SCHEME + " ")
+            @ApiImplicitParam(name = GlobalWebserviceValues.AUTHORIZATION, required = true,
+                    dataType = GlobalWebserviceValues.DATA_TYPE_STRING, paramType = GlobalWebserviceValues.HEADER,
+                    value = DocumentationAnnotation.ACCES_TOKEN,
+                    example = GlobalWebserviceValues.AUTHENTICATION_SCHEME + " ")
     })
     @Produces(MediaType.APPLICATION_JSON)
     public Response getAnnotationByUri(
             @ApiParam(
-                    value = DocumentationAnnotation.SENSOR_URI_DEFINITION, 
-                    required = true, 
-                    example = DocumentationAnnotation.EXAMPLE_SENSOR_URI) 
-                @URL @PathParam("uri") String uri) {
-        
+                    value = DocumentationAnnotation.SENSOR_URI_DEFINITION,
+                    required = true,
+                    example = DocumentationAnnotation.EXAMPLE_SENSOR_URI)
+            @URL @PathParam("uri") String uri) {
+
         return getGETByUriResponseFromDAOResults(new AnnotationDAO(userSession.getUser()), uri);
     }
 
     @Override
     protected ArrayList<AbstractVerifiedClass> getDTOsFromObjects(List<? extends Object> objects) {
-        ArrayList<AbstractVerifiedClass> dtos = new ArrayList();
+        ArrayList<AbstractVerifiedClass> dtos = new ArrayList<>();
         // Generate DTOs
         objects.forEach((object) -> {
             dtos.add(new AnnotationDTO((Annotation)object));
         });
         return dtos;
     }
-    
+
     @Override
     protected List<? extends Object> getObjectsFromDTOs (List<? extends AbstractVerifiedClass> dtos)
             throws Exception {
-        List<Object> objects = new ArrayList<>();
+        List<Object> objects = new ArrayList<>(dtos.size());
         for (AbstractVerifiedClass objectDto : dtos) {
             objects.add((Annotation)objectDto.createObjectFromDTO());
         }
         return objects;
     }
-    
+
     @Override
     protected List<String> getUrisFromObjects (List<? extends Object> createdObjects) {
-        List<String> createdUris = new ArrayList<>();
+        List<String> createdUris = new ArrayList<>(createdObjects.size());
         createdObjects.forEach(object -> {
             createdUris.add(((Annotation)object).getUri());
         });
         return createdUris;
+    }
+
+    /**
+     * Delete each {@link Annotation} URI from {@link DeleteDTO#getUris()}
+     * @param deleteDTO : the DTO which contains the list of Annotation URI to delete
+     * @param context
+     * @return
+     *
+     * @example
+     *[
+     *	http://www.phenome-fppn.fr/platform/id/annotation/8247af37-769c-495b-8e7e-78b1141176c2,
+     *  http://www.phenome-fppn.fr/platform/id/annotation/8247gt37-769c-495b-8e7e-91jh633151k4
+     *]
+     *
+     */
+    @DELETE
+    @Path("{uri}")
+    @ApiOperation(
+            value = "Delete a list of annotation",
+            notes = "Delete a list of annotation. Need URL encoded annotation URI"
+
+    )
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Annotation(s) deleted", response = ResponseFormPOST.class),
+            @ApiResponse(code = 400, message = DocumentationAnnotation.BAD_USER_INFORMATION),
+            @ApiResponse(code = 401, message = DocumentationAnnotation.USER_NOT_AUTHORIZED),
+            @ApiResponse(code = 500, message = DocumentationAnnotation.INTERNAL_SERVER_ERROR),
+    })
+    @ApiImplicitParams({
+            @ApiImplicitParam(
+                    name = GlobalWebserviceValues.AUTHORIZATION,
+                    required = true,
+                    dataType = GlobalWebserviceValues.DATA_TYPE_STRING,
+                    paramType = GlobalWebserviceValues.HEADER,
+                    value = DocumentationAnnotation.ACCES_TOKEN,
+                    example = GlobalWebserviceValues.AUTHENTICATION_SCHEME + " ")
+    })
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response deleteAnnotationByUri(
+            @ApiParam(
+                    value = DocumentationAnnotation.ANNOTATION_URI_DEFINITION,
+                    required = true,
+                    example = DocumentationAnnotation.EXAMPLE_ANNOTATION_URI
+            )
+            @Valid @NotNull DeleteDTO deleteDTO, @Context HttpServletRequest context) {
+
+        AnnotationDAO annotationDAO = new AnnotationDAO(userSession.getUser());
+        if (context.getRemoteAddr() != null) {
+            annotationDAO.setRemoteUserAdress(context.getRemoteAddr());
+        }
+        Response response = buildDeleteObjectsByUriResponse(annotationDAO, deleteDTO,"Annotation(s) deleted");
+        annotationDAO.getConnection().close();
+        return response;
     }
 }

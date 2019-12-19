@@ -8,8 +8,14 @@
 package opensilex.service.dao;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
+
+import org.apache.jena.arq.querybuilder.ExprFactory;
+import org.apache.jena.arq.querybuilder.SelectBuilder;
 import org.apache.jena.arq.querybuilder.UpdateBuilder;
+import org.apache.jena.arq.querybuilder.WhereBuilder;
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.NodeFactory;
 import org.apache.jena.rdf.model.Resource;
@@ -21,6 +27,8 @@ import org.eclipse.rdf4j.query.QueryEvaluationException;
 import org.eclipse.rdf4j.query.QueryLanguage;
 import org.eclipse.rdf4j.query.TupleQuery;
 import org.eclipse.rdf4j.query.TupleQueryResult;
+import org.eclipse.rdf4j.query.Update;
+import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.RepositoryException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +41,7 @@ import opensilex.service.dao.exception.UnknownUriException;
 import opensilex.service.dao.manager.Rdf4jDAO;
 import opensilex.service.model.User;
 import opensilex.service.ontology.Contexts;
+import opensilex.service.ontology.Oa;
 import opensilex.service.ontology.Oeev;
 import opensilex.service.ontology.Rdf;
 import opensilex.service.ontology.Rdfs;
@@ -634,10 +643,129 @@ public class EventDAO extends Rdf4jDAO<Event> {
                 Oeev.concerns.getURI(),
                 event.getConcernedItems());
     }
-
+    
     @Override
-    public void delete(List<Event> objects) throws DAOPersistenceException, Exception {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public void delete(List<Event> events) throws DAOPersistenceException, Exception {
+    	
+    	// get all events URIs into an ArrayList via Stream API
+    	List<String> uris = events.stream()
+    		.map(event -> event.getUri()) 
+    		.collect(Collectors.toCollection(ArrayList::new));
+    	checkAndDeleteAll(uris);
+    }
+    
+    /**
+     * @apiNote
+     * WARNING : delete an event trigger the deletion of all annotation which only have the event as target . 
+     */
+    @Override
+    protected void deleteAll(List<String> uris) throws RepositoryException {
+    	
+    	AnnotationDAO annotationDAO = new AnnotationDAO(user);
+    	RepositoryConnection conn = getConnection(); 
+    	
+    	// make sure the two DAO use the same connection
+    	annotationDAO.setConnection(conn);
+
+    	for(String eventUri : uris) {
+    		
+    		// get all annotation on event before deleting the event itself
+    		List<String> annotationUris = getAllAnnotationUrisWithEventAsTarget(eventUri);
+    		
+    		UpdateBuilder deleteEventQuery = deleteEventTriples(eventUri);
+    		Update deleteEventUpdate = conn.prepareUpdate(QueryLanguage.SPARQL,deleteEventQuery.build().toString());
+    		deleteEventUpdate.execute();
+    		   		
+    		// delete all annotation which have the given event as target
+    		if(! annotationUris.isEmpty())
+    			annotationDAO.deleteAll(annotationUris);        	
+    	}
+    }
+    
+    /**
+     * @return the {@link List} of {@link Annotation} which only have the given event uri as target.
+     * @example
+     * SELECT DISTINCT ?a
+ 	 * WHERE {
+     * 		?annotation oa:hasTarget "http://www.phenome-fppn.fr/id/event/5a1b3c0d-58af-4cfb-811e-e141b11453b1".
+     * 		MINUS {
+     * 			?annotation oa:hasTarget ?target.
+	 * 			FILTER ("http://www.phenome-fppn.fr/id/event/5a1b3c0d-58af-4cfb-811e-e141b11453b1" = ?target)
+     * 		}
+     * 		
+	 * } 
+     * @param eventUri
+     */
+    protected List<String> getAllAnnotationUrisWithEventAsTarget(String eventUri) {
+    	
+    	Node annotation = NodeFactory.createVariable("annotation"), 
+    		 target = NodeFactory.createVariable("target"),
+    		 oaTargetPred = NodeFactory.createURI(Oa.RELATION_HAS_TARGET.toString()),
+    		 event = NodeFactory.createURI(eventUri),
+    		 annotationGraph = NodeFactory.createURI(Contexts.ANNOTATIONS.toString());
+    	
+    	String removeAnnotationQuery = new SelectBuilder()
+			.addVar(annotation)
+			.addGraph(annotationGraph, new WhereBuilder() 
+				.addWhere(annotation,oaTargetPred,event)
+				.addMinus(new WhereBuilder()
+					.addWhere(annotation,oaTargetPred,target)
+					.addFilter(new ExprFactory().ne(event, target)))
+			)
+			.buildString();
+    		
+    	List<String> annotationUris = new LinkedList<>();
+    	TupleQuery getAnnotationQuery = getConnection().prepareTupleQuery(removeAnnotationQuery);
+    	TupleQueryResult res = getAnnotationQuery.evaluate();
+    	
+    	while(res.hasNext()) {
+    		BindingSet bs = res.next();
+    		annotationUris.add(bs.getValue(annotation.getName()).stringValue());
+    	}
+    	return annotationUris;
+    }
+    
+    /**
+     * @return an {@link UpdateBuilder} producing a SPARQL query which remove all event triples
+     * @example
+     * <pre>
+     * DELETE {
+     * 		"http://www.phenome-fppn.fr/id/event/5a1b3c0d-58af-4cfb-811e-e141b11453b1" ?p ?o .
+     * 	    ?s ?p_in "http://www.phenome-fppn.fr/id/event/5a1b3c0d-58af-4cfb-811e-e141b11453b1" .
+     *  	?time ?time_pred ?time_object 
+     * } WHERE { 
+     *		{ "http://www.phenome-fppn.fr/id/event/5a1b3c0d-58af-4cfb-811e-e141b11453b1" ?p_out ?o ;
+     *          																time:hasTime ?time. 
+     *       ?time ?time_pred ?time_object . }
+     *       UNION { ?s ?p_in "http://www.phenome-fppn.fr/id/event/5a1b3c0d-58af-4cfb-811e-e141b11453b1" }
+     *     }   
+     * }
+     * </pre>
+     * @param eventUri : the URI of the {@link Event} to delete
+     */
+    protected UpdateBuilder deleteEventTriples(String eventUri) {
+    	
+    	Node  outPredicate = NodeFactory.createVariable("p_out"),  
+         	  object = NodeFactory.createVariable("o"), 
+         	  subject = NodeFactory.createVariable("s"),
+              inPredicate = NodeFactory.createVariable("p_in"),
+         	  time = NodeFactory.createVariable("time"), 
+         	  timePred = NodeFactory.createVariable("time_pred"),
+         	  timeObj = NodeFactory.createVariable("time_object");
+                 	  
+		 Node hasTimePred = NodeFactory.createURI(Time.hasTime.getURI()), 
+     		  eventNode = NodeFactory.createURI(eventUri);
+      	
+      	return new UpdateBuilder()   		
+      		.addDelete(eventNode,outPredicate,object)
+      		.addDelete(time,timePred,timeObj)
+      		.addDelete(subject,inPredicate,eventNode)
+      		
+			.addWhere(eventNode,outPredicate,object) 
+  			.addWhere(eventNode,hasTimePred,time)
+  			.addWhere(time,timePred,timeObj) 
+  			.addUnion(
+  				new WhereBuilder().addWhere(subject,inPredicate,eventNode));  
     }
 
     @Override
