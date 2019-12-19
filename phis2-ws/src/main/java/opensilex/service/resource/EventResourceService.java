@@ -465,6 +465,11 @@ public class EventResourceService  extends ResourceService {
     }
     
     /**
+     * Delete each {@link Event} URI from {@link DeleteDTO#getUris()}
+     * @param deleteDTO : the DTO which contains the list of Event URI to delete
+     * @param context
+     * @return
+     *
      * @example
      *[
      *	http://www.phenome-fppn.fr/platform/id/event/8247af37-769c-495b-8e7e-78b1141176c2,
@@ -494,12 +499,6 @@ public class EventResourceService  extends ResourceService {
     })
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    /**
-     * Delete each {@link Event} URI from {@link DeleteDTO#getUris()}
-     * @param deleteDTO : the DTO which contains the list of Event URI to delete
-     * @param context
-     * @return
-     */
     public Response deleteEventUri( 
     		@ApiParam(
 		        value = DocumentationAnnotation.EVENT_URI_DEFINITION,
