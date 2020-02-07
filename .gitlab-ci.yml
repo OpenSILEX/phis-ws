@@ -1,0 +1,63 @@
+# CI Deployment protocol for tomcat 8
+
+# Cache downloaded dependencies and plugins between builds.
+# To keep cache across branches add 'key: "$CI_JOB_NAME"'
+cache:
+  paths:
+    - .m2/repository
+
+# Need to be defined in GITLAB CI Variables
+#   REMOTE_IP : "138.102.159.37"
+#   REMOTE_PORT: "8080"
+#   WAR : openSilexTestAPI
+#   MANAGER_ACCOUNT : phis
+#   MANAGER_PASS : "*******"
+
+variables:
+   # This will supress any download for dependencies and plugins or upload messages which would clutter the console log.
+   # `showDateTime` will show the passed time in milliseconds. You need to specify `--batch-mode` to make this work.
+   MAVEN_OPTS: "-Dhttps.protocols=TLSv1.2 -Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=WARN -Dorg.slf4j.simpleLogger.showDateTime=true -Djava.awt.headless=true"
+   # As of Maven 3.3.0 instead of this you may define these options in `.mvn/maven.config` so the same config is used
+   # when running from the command line.
+   # `installAtEnd` and `deployAtEnd` are only effective with recent version of the corresponding plugins.
+   MAVEN_CLI_OPTS: "--batch-mode --errors --fail-at-end --show-version -DinstallAtEnd=true -DdeployAtEnd=true"
+   BUILD_WAR_PATH: "phis2-ws/target/opensilex.war"
+   
+
+before_script:
+  - mkdir -p $CI_PROJECT_DIR/.m2/repository
+
+build:webservice:
+  image: maven:3.6.3-jdk-11
+  stage: build
+  script:
+    - cd phis2-ws
+    - mvn $MAVEN_CLI_OPTS install -Ptest
+  artifacts:
+    paths:
+    - $BUILD_WAR_PATH
+    expire_in: "1 week"
+  only:
+    - master  
+    
+deploy:webservice:
+  image: curlimages/curl
+  stage: deploy
+  script:
+    - curl -v -T $BUILD_WAR_PATH "http://$MANAGER_ACCOUNT:$MANAGER_PASS@$REMOTE_IP:$REMOTE_PORT/manager/text/deploy?path=/$WAR&update=true"
+  dependencies:
+    - build:webservice
+  only:
+    - master  
+
+# Trigger pipeline for test deployment
+deploy:webservice:modularity:
+  image: curlimages/curl
+  stage: deploy
+  script:
+    - echo $CI_COMMIT_SHORT_SHA
+    - curl --request POST --form "token=$CI_JOB_TOKEN" --form "ref=master" https://forgemia.inra.fr/api/v4/projects/403/trigger/pipeline
+  dependencies:
+    - build:webservice
+  only:
+    - modularity
