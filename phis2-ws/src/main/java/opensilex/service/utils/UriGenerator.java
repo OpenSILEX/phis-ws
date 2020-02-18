@@ -62,7 +62,7 @@ import opensilex.service.model.Group;
  * \SILEX:todo
  * @update [Vincent Migot] 17 July 2019: Add syncronization on public methods to prevent URI duplication
  */
-public class UriGenerator {    
+public class UriGenerator {
     private static final String URI_CODE_ACTUATOR = "a";
     private static final String URI_CODE_SCIENTIFIC_OBJECT = "o";
     private static final String URI_CODE_IMAGE = "i";
@@ -88,14 +88,14 @@ public class UriGenerator {
     public static final String PLATFORM_URI_ID_VARIABLES = PLATFORM_URI_ID + "variables/" + URI_CODE_VARIABLE;
     private static final String PLATFORM_URI_ID_VARIETY = PLATFORM_URI + "v/";
     private static final String PLATFORM_URI_ID_PROVENANCE = PLATFORM_URI_ID + "provenance/";
-    
+
     private static final String EXPERIMENT_URI_SEPARATOR = "-";
 
     /**
      * Prevent URI generator to be instanciated
      */
     private UriGenerator() {}
-    
+
     /**
      * Generates a new vector URI. a vector URI has the following pattern:
      * <prefix>:<year>/<unic_code>
@@ -118,12 +118,12 @@ public class UriGenerator {
         }
         return getVectorUriPatternByYear(year) + newVectorNumber;
     }
-    
+
     /**
      * Internal variable to store the last vector ID by year
      */
     private static Map<String, Integer> vectorLastIDByYear = new HashMap<>();
-    
+
     /**
      * Return the next vector ID by incrementing vectorLastIDByYear variable and initializing it before if needed
      * @return next vector ID
@@ -133,7 +133,7 @@ public class UriGenerator {
             VectorDAO vectorDAO = new VectorDAO();
             vectorLastIDByYear.put(year, vectorDAO.getLastIdFromYear(year));
         }
-        
+
         int vectorLastID = vectorLastIDByYear.get(year);
         vectorLastID++;
         vectorLastIDByYear.put(year, vectorLastID);
@@ -148,7 +148,7 @@ public class UriGenerator {
     public static String getVectorUriPatternByYear(String year) {
         return PLATFORM_URI + year + "/" + URI_CODE_VECTOR + year.substring(2, 4);
     }
-    
+
     /**
      * Generates a new sensor URI. A sensor URI has the following pattern:
      * <prefix>:<year>/<unic_code>
@@ -176,12 +176,12 @@ public class UriGenerator {
         }
         return getSensorUriPatternByYear(year) + newSensorNumber;
     }
-    
+
     /**
      * Internal variable to store the last sensor ID by year
      */
     private static Map<String, Integer> sensorLastIDByYear = new HashMap<>();
-    
+
     /**
      * Return the next sensor ID by incrementing sensorLastIDByYear variable and initializing it before if needed
      * @return next sensor ID
@@ -191,13 +191,13 @@ public class UriGenerator {
             SensorDAO sensorDAO = new SensorDAO();
             sensorLastIDByYear.put(year, sensorDAO.getLastIdFromYear(year));
         }
-        
+
         int sensorLastID = sensorLastIDByYear.get(year);
         sensorLastID++;
         sensorLastIDByYear.put(year, sensorLastID);
         return sensorLastID;
     }
-    
+
     /**
      * Return sensor uri pattern <prefix>:<year>/<unic_code>
      * @param year
@@ -206,7 +206,7 @@ public class UriGenerator {
     public static String getSensorUriPatternByYear(String year) {
         return PLATFORM_URI + year + "/" + URI_CODE_SENSOR + year.substring(2, 4);
     }
-    
+
     /**
      * Generate a new actuator URI. A actuator URI has the following pattern:
      * <prefix>:<year>/<unic_code>
@@ -232,14 +232,14 @@ public class UriGenerator {
                 newActuatorNumber = numberOfActuators;
                 break;
         }
-        return getActuatorUriPatternByYear(year) + newActuatorNumber;        
+        return getActuatorUriPatternByYear(year) + newActuatorNumber;
     }
 
     /**
      * Internal variable to store the last actuator ID by year
      */
     private static Map<String, Integer> actuatorLastIDByYear = new HashMap<>();
-    
+
     /**
      * Return the next actuator ID by incrementing actuatorLastIDByYear variable and initializing it before if needed
      * @return next actuator ID
@@ -249,13 +249,13 @@ public class UriGenerator {
             ActuatorDAO actuatorDAO = new ActuatorDAO();
             actuatorLastIDByYear.put(year, actuatorDAO.getLastIdFromYear(year));
         }
-        
+
         int actuatorLastID = actuatorLastIDByYear.get(year);
         actuatorLastID++;
         actuatorLastIDByYear.put(year, actuatorLastID);
         return actuatorLastID;
     }
-    
+
     /**
      * Return actuator uri pattern <prefix>:<year>/<unic_code>
      * @param year
@@ -281,15 +281,15 @@ public class UriGenerator {
         while (agronomicalObjectId.length() < 6) {
             agronomicalObjectId = "0" + agronomicalObjectId;
         }
-        
-        return getScientificObjectUriPatternByYear(year) + agronomicalObjectId;        
+
+        return getScientificObjectUriPatternByYear(year) + agronomicalObjectId;
     }
 
     /**
      * Internal variable to store the last scientifc object ID by year
      */
     private static Map<String, Integer> scientificObjectLastIDByYear = new HashMap<>();
-    
+
     /**
      * Return the next scientifc object ID by incrementing scientificObjectLastIDByYear variable and initializing it before if needed
      * @return next scientific object ID
@@ -299,13 +299,13 @@ public class UriGenerator {
             ScientificObjectRdf4jDAO scientificObjectDAO = new ScientificObjectRdf4jDAO();
             scientificObjectLastIDByYear.put(year, scientificObjectDAO.getLastScientificObjectIdFromYear(year));
         }
-        
+
         int scientificObjectLastID = scientificObjectLastIDByYear.get(year);
         scientificObjectLastID++;
         scientificObjectLastIDByYear.put(year, scientificObjectLastID);
         return scientificObjectLastID;
     }
-    
+
     /**
      * Return scientific object uri pattern <prefix>:<year>/<unic_code>
      * @param year
@@ -324,7 +324,7 @@ public class UriGenerator {
      */
     private static String generateVariableUri() {
         // Generate variable URI based on next id
-        String variableId = Integer.toString(getNextVariableID());        
+        String variableId = Integer.toString(getNextVariableID());
 
         while (variableId.length() < 3) {
             variableId = "0" + variableId;
@@ -332,12 +332,12 @@ public class UriGenerator {
 
         return PLATFORM_URI_ID_VARIABLES + variableId;
     }
-    
+
     /**
      * Internal variable to store the last variable ID
      */
     private static Integer variableLastID;
-    
+
     /**
      * Return the next variable ID by incrementing variableLastID variable and initializing it before if needed
      * @return next variable ID
@@ -347,9 +347,9 @@ public class UriGenerator {
             VariableDAO variableDAO = new VariableDAO();
             variableLastID = variableDAO.getLastId();
         }
-        
+
         variableLastID++;
-        
+
         return variableLastID;
     }
 
@@ -370,7 +370,7 @@ public class UriGenerator {
 
         return PLATFORM_URI_ID_TRAITS + traitId;
     }
-    
+
     /**
      * Internal variable to store the last trait ID
      */
@@ -385,9 +385,9 @@ public class UriGenerator {
             TraitDAO traitDAO = new TraitDAO();
             traitLastID = traitDAO.getLastId();
         }
-        
+
         traitLastID++;
-        
+
         return traitLastID;
     }
 
@@ -408,7 +408,7 @@ public class UriGenerator {
 
         return PLATFORM_URI_ID_METHOD + methodId;
     }
-    
+
     /**
      * Internal variable to store the last method ID
      */
@@ -423,9 +423,9 @@ public class UriGenerator {
             MethodDAO methodDAO = new MethodDAO();
             methodLastID = methodDAO.getLastId();
         }
-        
+
         methodLastID++;
-        
+
         return methodLastID;
     }
 
@@ -451,7 +451,7 @@ public class UriGenerator {
      * Internal variable to store the last unit ID
      */
     private static Integer unitLastID;
-    
+
     /**
      * Return the next unit ID by incrementing unitLastID variable and initializing it before if needed
      * @return next unit ID
@@ -461,12 +461,17 @@ public class UriGenerator {
             UnitDAO unitDAO = new UnitDAO();
             unitLastID = unitDAO.getLastId();
         }
-        
+
         unitLastID++;
-        
+
         return unitLastID;
     }
-    
+
+    /**
+     * Association between a platform graph context and the last radiometricTarget generated id into this graph. 
+     */
+    private static Map<String,Integer> radiometricTargetLastIdByPlatform = new HashMap<>();
+
     /**
      * Generates a new radiometric target URI. A radiometric target URI follows the pattern: 
      * <prefix>:id/radiometricTargets/<unic_code>
@@ -475,19 +480,23 @@ public class UriGenerator {
      * @return The new radiometric target URI
      */
     private static String generateRadiometricTargetUri() {
-        //1. Get the highest radiometric target id (i.e. the last inserted
-        //radiometric target)
-        RadiometricTargetDAO radiometricTargetDAO = new RadiometricTargetDAO();
-        int lastID = radiometricTargetDAO.getLastId();
-        
+
+        //1. Get the highest radiometric target id (i.e. the last inserted radiometric target)   	
+        String platformGraph = Contexts.RADIOMETRIC_TARGETS.toString();
+        if(! radiometricTargetLastIdByPlatform.containsKey(platformGraph)) {
+            RadiometricTargetDAO radiometricTargetDAO = new RadiometricTargetDAO();
+            radiometricTargetLastIdByPlatform.put(platformGraph,radiometricTargetDAO.getLastId(platformGraph));
+        }
+
         //2. Generate radiometric target URI
-        int newRadiometricTargetID = lastID + 1;
-        String radiometricTargetID = Integer.toString(newRadiometricTargetID);
-        
+        int radiometricTargetLastID = radiometricTargetLastIdByPlatform.get(platformGraph)+1;
+        String radiometricTargetID = Integer.toString(radiometricTargetLastID);
         while (radiometricTargetID.length() < 3) {
             radiometricTargetID = "0" + radiometricTargetID;
         }
-        
+
+        // update the platform last radiometricId
+        radiometricTargetLastIdByPlatform.put(platformGraph,radiometricTargetLastID);
         return PLATFORM_URI_ID_RADIOMETRIC_TARGET + URI_CODE_RADIOMETRIC_TARGET + radiometricTargetID;
     }
 
@@ -518,55 +527,34 @@ public class UriGenerator {
     /**
      * Generates a new annotation URI. A unit annotation follows the pattern:
      * <prefix>:id/annotation/<unic_code>
-     * <unic_code> = 1 letter type + java.util.UUID.randomUUID(); 
-     * @example http://www.phenome-fppn.fr/diaphen/id/annotation/e073961b-e766-4493-b98f-74a8b2846893
+     * <unic_code> = 1 letter type + {@link UUID#randomUUID()}+_+{@link System#nanoTime()}
+     * @example http://www.phenome-fppn.fr/diaphen/id/annotation/e073961b-e766-4493-b98f-74a8b2846893_295073540722571
      * @return the new annotation URI
      */
     private static String generateAnnotationUri() {
-        //1. check if URI already exists
-        AnnotationDAO annotationDao = new AnnotationDAO();
-        String newAnnotationUri = PLATFORM_URI_ID_ANNOTATION + UUID.randomUUID();
-        while (annotationDao.existUri(newAnnotationUri)) {
-            newAnnotationUri = PLATFORM_URI_ID_ANNOTATION + UUID.randomUUID();
-        }
-
-        return newAnnotationUri;
+        return PLATFORM_URI_ID_ANNOTATION +UUID.randomUUID() +"_" +System.nanoTime();
     }
 
     /**
      * Generates a new event URI. an event URI follows the pattern:
      * <prefix>:id/event/<unic_code>
-     * <unic_code> = java.util.UUID.randomUUID();
-     * @example http://www.phenome-fppn.fr/diaphen/id/event/e073961b-e766-4493-b98f-74a8b2846893
+     * <unic_code> = {@link UUID#randomUUID()}+_+{@link System#nanoTime()}
+     * @example http://www.phenome-fppn.fr/diaphen/id/event/e073961b-e766-4493-b98f-74a8b2846893_295073540722571
      * @return the new event URI
      */
     private static String generateEventUri() {
-        // To check if URI already exists
-        EventDAO eventDao = new EventDAO(null);
-        String newEventUri = PLATFORM_URI_ID_EVENT + UUID.randomUUID();
-        while (eventDao.existUri(newEventUri)) {
-            newEventUri = PLATFORM_URI_ID_EVENT + UUID.randomUUID();
-        }
-
-        return newEventUri;
+        return  PLATFORM_URI_ID_EVENT +UUID.randomUUID() + "_" +System.nanoTime();
     }
 
     /**
      * Generates a new Instant URI. The URI follows the pattern:
      * <prefix>:id/instant/<unic_code>
-     * <unic_code> = java.util.UUID.randomUUID();
-     * @example http://www.phenome-fppn.fr/diaphen/id/instant/e073961b-e766-4493-b98f-74a8b2846893
+     * <unic_code> = {@link UUID#randomUUID()}+_+{@link System#nanoTime()};
+     * @example http://www.phenome-fppn.fr/diaphen/id/instant/e073961b-e766-4493-b98f-74a8b2846893_295073540722571
      * @return the new URI
      */
     private static String generateInstantUri() {
-        // To check if the URI already exists
-        EventDAO timeDao = new EventDAO(null);
-        String newInstantUri = PLATFORM_URI_ID_INSTANT + UUID.randomUUID();
-        while (timeDao.existUri(newInstantUri)) {
-            newInstantUri = PLATFORM_URI_ID_INSTANT + UUID.randomUUID();
-        }
-
-        return newInstantUri;
+        return  PLATFORM_URI_ID_INSTANT +UUID.randomUUID() +"_" +System.nanoTime();
     }
 
     /**
@@ -606,7 +594,7 @@ public class UriGenerator {
             return PLATFORM_URI + year + nbImagesByYear;
         }
     }
-    
+
     /**
      * Generates a new project URI. A project URI follows the pattern:
      * <prefix>:<projectAcronyme>
@@ -622,35 +610,41 @@ public class UriGenerator {
         if (projectDAO.existUri(projectUri)) {
             throw new AlreadyExists("The project uri " + projectUri + " already exist in the triplestore.");
         }
-        
+
         return projectUri;
     }
-    
+
+    /**
+     * Association between an experiment campaign year and the last id generated during this year
+     */
+    private static Map<String,Integer> lastIdByCampaigns = new HashMap<>();
+
     /**
      * Generates a new experiment URI. An experiment URI follows this pattern:
      * <prefix>:<unic_code>
      * <unic_code> = infrastructure code + 4 digits year + auto increment digit (per year)
      * @example http://www.opensilex.org/demo/DMO2019-1
-     * @param campaign the year of the campaign of the experiment
+     * @param campaignYear : the year of the campaign of the experiment
      * @return the new URI
      */
-    private static String generateExperimentUri(String campaign) {
-        //1. Get the campaign last experiment URI
-        Integer campaignLastExperimentUri = (new ExperimentSQLDAO()).getCampaignLastExperimentUri(campaign);
-        //2. Generate the URI of the experiment
-        
-        Integer newExperimentNumber = campaignLastExperimentUri + 1;
-        
-        return PLATFORM_URI + PLATFORM_CODE + campaign + EXPERIMENT_URI_SEPARATOR + newExperimentNumber;
+    private static String generateExperimentUri(String campaignYear) {
+
+        // check if the campaign year is already registered in the local map
+        if(! lastIdByCampaigns.containsKey(campaignYear)) {
+            lastIdByCampaigns.put(campaignYear, new ExperimentSQLDAO().getCampaignLastExperimentUri(campaignYear));
+        }
+        Integer newExperimentNumber = lastIdByCampaigns.get(campaignYear) + 1;
+        lastIdByCampaigns.put(campaignYear, newExperimentNumber);
+        return PLATFORM_URI + PLATFORM_CODE + campaignYear + EXPERIMENT_URI_SEPARATOR + newExperimentNumber;
     }
-    
+
     /**
      * Generate a new group URI. A group URI follows the pattern:
      * <prefix>:<groupName>
      * @example http://www.opensilex.org/demo/INRA-MISTEA.GAMMA
      * @param name the group name
      * @return the new generated URI
-     * @throws Exception 
+     * @throws Exception
      */
     private static String generateGroupUri(String name) throws Exception {
         //1. Generate URI
@@ -658,20 +652,20 @@ public class UriGenerator {
         //2. Check if the generated URI already exists
         GroupDAO groupDao = new GroupDAO();
         Group group = new Group(groupUri);
-        
+
         if (groupDao.existInDB(group)) {
             throw new AlreadyExists("The group uri " + groupUri + " already exist in the triplestore.");
         }
-        
+
         return groupUri;
     }
-    
+
     /**
      * Generates a new provenance URI. A provenance URI follows the pattern :
      * <prefix>:id/provenance/<timestamp>
      * @example http://www.opensilex.org/demo/id/provenance/019275849
      * @return the new generated uri
-     * @throws Exception 
+     * @throws Exception
      */
     private static String generateProvenanceUri() {
         //Generates uri
@@ -686,44 +680,44 @@ public class UriGenerator {
      * @example http://www.opensilex.org/id/data/1e9eb2fbacc7222d3868ae96149a8a16b32b2a1870c67d753376381ebcbb5937e78da502ee3f42d3828eaa8cab237f93
      * @param additionalInformation the key of the data
      * @return the new generated uri
-     * @throws Exception 
+     * @throws Exception
      */
     private static String generateDataUri(String additionalInformation) throws Exception {
         // Define data URI with key hash  and random id to prevent collision
         String uri = Contexts.PLATFORM.toString() + "id/data/" + getUniqueHash(additionalInformation);
-        
+
         return uri;
     }
-    
+
     /**
      * Generates a new data file URI.
      * @example http://www.opensilex.org/id/dataFile/1e9eb2fbacc7222d3868ae96149a8a16b32b2a1870c67d753376381ebcbb5937e78da502ee3f42d3828eaa8cab237f93
      * @param additionalInformation the key of the data file
      * @return the new generated uri
-     * @throws Exception 
+     * @throws Exception
      */
     private static String generateDataFileUri(String collection, String key) throws Exception {
         // Define data URI with key hash  and random id to prevent collision
         String uri = Contexts.PLATFORM.toString() + "id/dataFile/" + collection + "/" + getUniqueHash(key);
-        
+
         return uri;
     }
-    
+
     private static String getUniqueHash(String key) throws NoSuchAlgorithmException {
         // Generate SHA-256 hash
         MessageDigest digest = MessageDigest.getInstance("SHA-256");
         byte[] encodedhash = digest.digest(key.getBytes(StandardCharsets.UTF_8));
-        
+
         // Convert hash to base32 string in lower case string and remove = padding sign
         Base32 base32 = new Base32();
         String encodedString = base32.encodeAsString(encodedhash).replaceAll("=", "").toLowerCase();
-        
+
         // Generate UUID without '-' sign
         String randomId = UUID.randomUUID().toString().replaceAll("-", "");
-        
+
         return encodedString + randomId;
     }
-    
+
     /**
      * Generates scientific objects uris for a year. The number depends on the given numberOfUrisToGenerate.
      * @param year
@@ -736,11 +730,11 @@ public class UriGenerator {
         }
 
         List<String> scientificObjectUris = new ArrayList<>();
-        
+
         for (int i = 0; i < numberOfUrisToGenerate; i++) {
             scientificObjectUris.add(generateScientificObjectUri(year));
         }
-        
+
         return scientificObjectUris;
     }
 
@@ -756,7 +750,7 @@ public class UriGenerator {
      * @return the generated URI
      * @throws java.lang.Exception
      */
-    public synchronized static String generateNewInstanceUri(String instanceType, String year, String additionalInformation) 
+    public synchronized static String generateNewInstanceUri(String instanceType, String year, String additionalInformation)
             throws Exception {
         if (year == null) {
             year = Integer.toString(Calendar.getInstance().get(Calendar.YEAR));
@@ -782,7 +776,7 @@ public class UriGenerator {
             return generateVarietyUri(additionalInformation);
         } else if (uriDao.isSubClassOf(instanceType, Oeso.CONCEPT_IMAGE.toString())) {
             return generateImageUri(year, additionalInformation);
-        } else if (instanceType.equals(Foaf.CONCEPT_AGENT.toString()) 
+        } else if (instanceType.equals(Foaf.CONCEPT_AGENT.toString())
                 || uriDao.isSubClassOf(instanceType, Foaf.CONCEPT_AGENT.toString())) {
             return generateAgentUri(additionalInformation);
         } else if (instanceType.equals(Oeso.CONCEPT_ANNOTATION.toString())) {
