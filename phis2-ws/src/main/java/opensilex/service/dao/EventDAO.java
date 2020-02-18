@@ -60,6 +60,7 @@ import org.joda.time.format.DateTimeFormatter;
  * accesses handling into a new ConcernedItemDAO class.
  * @update [Andréas Garcia] 8 Apr. 2019: Use DAO generic function create,
  * update, checkBeforeCreation and use exceptions to handle errors.
+ *
  * @author Andreas Garcia <andreas.garcia@inra.fr>
  */
 public class EventDAO extends Rdf4jDAO<Event> {
@@ -152,27 +153,26 @@ public class EventDAO extends Rdf4jDAO<Event> {
      *
      * @param uri
      * @param type
-     * @example SELECT DISTINCT ?uri ?rdfType ?dateTimeStamp WHERE { ?uri
-     * <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?rdfType . ?rdfType
-     * <http://www.w3.org/2000/01/rdf-schema#subClassOf>
-     *
-     * <http://www.opensilex.org/vocabulary/oeev#MoveFrom> . ?uri
-     * <http://www.opensilex.org/vocabulary/oeev#concerns> ?concernedItemUri .
-     * ?concernedItemUri  <http://www.w3.org/2000/01/rdf-schema#label>
-     * ?concernedItemLabel . ?uri  <http://www.w3.org/2006/time#hasTime> ?time .
-     * ?time  <http://www.w3.org/2006/time#inXSDDateTimeStamp> ?dateTimeStamp .
-     * BIND(<http://www.w3.org/2001/XMLSchema#dateTime>(str(?dateTimeStamp)) as
-     * ?dateTime) .
-     * BIND(<http://www.w3.org/2001/XMLSchema#dateTime>(str("2017-09-08T12:00:00+01:00"))
-     * as ?dateRangeStartDateTime) .
-     * BIND(<http://www.w3.org/2001/XMLSchema#dateTime>(str("2019-10-08T12:00:00+01:00"))
-     * as ?dateRangeEndDateTime) . FILTER ( (regex (str(?uri),
-     * "http://www.phenome-fppn.fr/id/event/96e72788-6bdc-4f8e-abd1-ce9329371e8e",
-     * "i")) && (regex (?concernedItemLabel, "Plot Lavalette", "i")) && (regex
-     * (str(?concernedItemUri),
-     * "http://www.phenome-fppn.fr/m3p/arch/2017/c17000242", "i")) &&
-     * (?dateRangeStartDateTime <= ?dateTime) && (?dateRangeEndDateTime >=
-     * ?dateTime) ) } GROUP BY ?uri ?rdfType ?dateTimeStamp LIMIT 20 OFFSET 0
+     * @example 
+     * SELECT DISTINCT ?uri ?rdfType ?dateTimeStamp 
+     * WHERE { 
+     *    ?uri <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?rdfType . 
+     *    ?rdfType <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://www.opensilex.org/vocabulary/oeev#MoveFrom> . 
+     *    ?uri <http://www.opensilex.org/vocabulary/oeev#concerns> ?concernedItemUri .
+     *    ?concernedItemUri  <http://www.w3.org/2000/01/rdf-schema#label>
+     *    ?concernedItemLabel . ?uri  <http://www.w3.org/2006/time#hasTime> ?time .
+     *    ?time  <http://www.w3.org/2006/time#inXSDDateTimeStamp> ?dateTimeStamp .
+     *    BIND(<http://www.w3.org/2001/XMLSchema#dateTime>(str(?dateTimeStamp)) as ?dateTime) .
+     *    BIND(<http://www.w3.org/2001/XMLSchema#dateTime>(str("2017-09-08T12:00:00+01:00")) as ?dateRangeStartDateTime) .
+     *    BIND(<http://www.w3.org/2001/XMLSchema#dateTime>(str("2019-10-08T12:00:00+01:00")) as ?dateRangeEndDateTime) . 
+     *    FILTER ( (regex (str(?uri), "http://www.phenome-fppn.fr/id/event/96e72788-6bdc-4f8e-abd1-ce9329371e8e", "i")) 
+     *        && (regex (?concernedItemLabel, "Plot Lavalette", "i")) 
+     *        && (regex (str(?concernedItemUri), "http://www.phenome-fppn.fr/m3p/arch/2017/c17000242", "i")) 
+     *        && (?dateRangeStartDateTime <= ?dateTime) && (?dateRangeEndDateTime >= ?dateTime) ) 
+     * } 
+     * GROUP BY ?uri ?rdfType ?dateTimeStamp 
+     * LIMIT 20 
+     * OFFSET 0
      * @param searchConcernedItemLabel
      * @param searchConcernedItemUri
      * @param dateRangeStartString
@@ -211,13 +211,13 @@ public class EventDAO extends Rdf4jDAO<Event> {
     /**
      * Prepares the event search query
      *
-     * @example SELECT ?uri ?rdfType ?dateTimeStamp WHERE { ?uri
-     * <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?rdfType . ?uri
-     * <http://www.w3.org/2006/time#hasTime> ?time . ?time
-     * <http://www.w3.org/2006/time#inXSDDateTimeStamp> ?dateTimeStamp . FILTER
-     * (regex (str(?uri),
-     * "http://opensilex.org/id/event/96e72788-6bdc-4f8e-abd1-ce9329371e8e",
-     * "i")) }
+     * @example 
+     * SELECT ?uri ?rdfType ?dateTimeStamp 
+     * WHERE { ?uri <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?rdfType . 
+     *       ?uri <http://www.w3.org/2006/time#hasTime> ?time . 
+     *       ?time <http://www.w3.org/2006/time#inXSDDateTimeStamp> ?dateTimeStamp . 
+     *       FILTER (regex (str(?uri), "http://opensilex.org/id/event/96e72788-6bdc-4f8e-abd1-ce9329371e8e", "i")) 
+     * }
      * @param searchUri
      * @return query
      */
@@ -387,11 +387,12 @@ public class EventDAO extends Rdf4jDAO<Event> {
                 // Annotations
                 AnnotationDAO annotationDAO = new AnnotationDAO(this.user);
                 event.setAnnotations(annotationDAO.find(
+                        null, 
+                        null, 
+                        event.getUri(), 
+                        null, 
                         null,
-                        null,
-                        event.getUri(),
-                        null,
-                        null,
+                        true,
                         0,
                         pageSizeMaxValue));
             }
@@ -557,30 +558,25 @@ public class EventDAO extends Rdf4jDAO<Event> {
     }
 
     /**
-     * Generates a query to count the results of the research with the searched
-     * parameters.
-     *
-     * @example SELECT DISTINCT (COUNT(DISTINCT ?uri) AS ?count) WHERE { ?uri
-     * <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> ?rdfType . ?rdfType
-     * <http://www.w3.org/2000/01/rdf-schema#subClassOf>
-     *
-     * <http://www.opensilex.org/vocabulary/oeev#MoveFrom> . ?uri
-     * <http://www.opensilex.org/vocabulary/oeev#concerns> ?concernedItemUri .
-     * ?concernedItemUri  <http://www.w3.org/2000/01/rdf-schema#label>
-     * ?concernedItemLabel . ?uri  <http://www.w3.org/2006/time#hasTime> ?time .
-     * ?time  <http://www.w3.org/2006/time#inXSDDateTimeStamp> ?dateTimeStamp .
-     * BIND(<http://www.w3.org/2001/XMLSchema#dateTime>(str(?dateTimeStamp)) as
-     * ?dateTime) .
-     * BIND(<http://www.w3.org/2001/XMLSchema#dateTime>(str("2017-09-08T12:00:00+01:00"))
-     * as ?dateRangeStartDateTime) .
-     * BIND(<http://www.w3.org/2001/XMLSchema#dateTime>(str("2019-10-08T12:00:00+01:00"))
-     * as ?dateRangeEndDateTime) . FILTER ( (regex (str(?uri),
-     * "http://www.phenome-fppn.fr/id/event/96e72788-6bdc-4f8e-abd1-ce9329371e8e",
-     * "i")) && (regex (?concernedItemLabel, "Plot Lavalette", "i")) && (regex
-     * (str(?concernedItemUri),
-     * "http://www.phenome-fppn.fr/m3p/arch/2017/c17000242", "i")) &&
-     * (?dateRangeStartDateTime <= ?dateTime) && (?dateRangeEndDateTime >=
-     * ?dateTime) ) }
+     * Generates a query to count the results of the research with the 
+     * searched parameters. 
+     * @example 
+     * SELECT DISTINCT  (COUNT(DISTINCT ?uri) AS ?count) 
+     * WHERE {
+     *   ?uri  <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>  ?rdfType  . 
+     *   ?rdfType  <http://www.w3.org/2000/01/rdf-schema#subClassOf>*  <http://www.opensilex.org/vocabulary/oeev#MoveFrom> . 
+     *   ?uri  <http://www.opensilex.org/vocabulary/oeev#concerns>  ?concernedItemUri  . 
+     *   ?concernedItemUri  <http://www.w3.org/2000/01/rdf-schema#label>  ?concernedItemLabel  . 
+     *   ?uri  <http://www.w3.org/2006/time#hasTime>  ?time  . 
+     *   ?time  <http://www.w3.org/2006/time#inXSDDateTimeStamp>  ?dateTimeStamp  . 
+     *   BIND(<http://www.w3.org/2001/XMLSchema#dateTime>(str(?dateTimeStamp)) as ?dateTime) .
+     *   BIND(<http://www.w3.org/2001/XMLSchema#dateTime>(str("2017-09-08T12:00:00+01:00")) as ?dateRangeStartDateTime) .
+     *   BIND(<http://www.w3.org/2001/XMLSchema#dateTime>(str("2019-10-08T12:00:00+01:00")) as ?dateRangeEndDateTime) .
+     *   FILTER ( (regex (str(?uri), "http://www.phenome-fppn.fr/id/event/96e72788-6bdc-4f8e-abd1-ce9329371e8e", "i")) 
+     *     && (regex (?concernedItemLabel, "Plot Lavalette", "i")) 
+     *     && (regex (str(?concernedItemUri), "http://www.phenome-fppn.fr/m3p/arch/2017/c17000242", "i")) 
+     *     && (?dateRangeStartDateTime <= ?dateTime) && (?dateRangeEndDateTime >= ?dateTime) ) 
+     * }
      */
     private SPARQLQueryBuilder prepareCountQuery(String searchUri, String searchType, String searchConcernedItemLabel, String searchConcernedItemUri, String dateRangeStartString, String dateRangeEndString) {
         SPARQLQueryBuilder query = this.prepareSearchQueryEvents(
@@ -687,27 +683,25 @@ public class EventDAO extends Rdf4jDAO<Event> {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
-    /**
-     * Adds a filter to the search query comparing a SPARQL dateTimeStamp
-     * variable to a date. SPARQL dateTimeStamp dates have to be handled in a
-     * specific way as the comparison operators (<, >, etc.) aren't available
-     * for dateTimeStamp objects.
-     *
-     * @see
-     * <a href="https://www.w3.org/TR/2013/REC-sparql11-query-20130321/#OperatorMapping">
+    /** 
+     * Adds a filter to the search query comparing a SPARQL dateTimeStamp 
+     * variable to a date. 
+     * SPARQL dateTimeStamp dates have to be handled in a specific way as 
+     * the comparison operators (<, >, etc.) aren't available for dateTimeStamp
+     * objects.
+     * @see <a href="https://www.w3.org/TR/2013/REC-sparql11-query-20130321/#OperatorMapping">
      * SparQL Operator Mapping
      * </a>
      * @param query
      * @param filterDateString
      * @param filterDateFormat
      * @param filterDateSparqlVariable SPARQL variable (?abc format)
-     * @param comparisonSign e.g >, >=, <, <=
-     * @param dateTimeStampToCompareSparqlVariable the SPARQL variable (?abc
-     * format) of the dateTimeStamp to which the date has to be compared
+     * @param comparisonSign e.g >, >=, <, <= 
+     * @param dateTimeStampToCompareSparqlVariable the SPARQL variable 
+     * (?abc format) of the dateTimeStamp to which the date has to be compared
      * @example SparQL code added to the query :
-     * BIND(xsd:dateTime(str("2017-09-10T12:00:00+01:00")) as
-     * ?dateRangeStartDateTime) . FILTER ( (?dateRangeStartDateTime <=
-     * ?dateTime) )
+     *   BIND(xsd:dateTime(str("2017-09-10T12:00:00+01:00")) as ?dateRangeStartDateTime) .
+     *   FILTER ( (?dateRangeStartDateTime <= ?dateTime) ) 
      */
     public static void filterSearchQueryWithDateTimeStampComparison(SPARQLStringBuilder query, String filterDateString, String filterDateFormat, String filterDateSparqlVariable, String comparisonSign, String dateTimeStampToCompareSparqlVariable) {
 
