@@ -1,0 +1,20 @@
+name: CI | OnPush_dispatch-to-opensilex-phis-docker-ci
+
+on: [push]
+
+jobs:
+  dispatch-to-opensilex-phis-docker-ci:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Informations
+      run: |
+        echo "Github-repository: '${{ github.repositoryUrl }}' "
+        echo " Repository:  $GITHUB_REPOSITORY "
+        echo " GITHUB_SHA:  '"$GITHUB_SHA"' "
+        echo " GITHUB_REF:  '"$GITHUB_REF"' "
+    - name: curl (dispatch-to-opensilex-phis-docker-ci)
+      run: |
+        curl -XPOST -u "${{ secrets.TRIGGER_USERNAME}}:${{secrets.TRIGGER_TOKEN}}"  -H "Accept:application/vnd.github.everest-preview+json"  -H "Content-Type:application/json" https://api.github.com/repos/"${{ secrets.TRIGGER_USERNAME}}"/"${{ secrets.TRIGGER_REPO_NAME}}"/dispatches --data '{"event_type":"build_application", "client_payload":{"repo__clone_url":"'"${{ github.repositoryUrl }}"'", "sha":"'"$GITHUB_SHA"'", "ref":"'"$GITHUB_REF"'" }}'

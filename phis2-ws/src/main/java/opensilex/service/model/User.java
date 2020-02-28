@@ -43,6 +43,9 @@ public class User {
     private String available;
 
     private ArrayList<Group> groups = new ArrayList<>();
+    
+    public User() {
+    }
 
     public User(String email, String password) {
         this.email = email;
