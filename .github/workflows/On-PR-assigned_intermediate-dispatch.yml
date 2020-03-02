@@ -1,0 +1,21 @@
+name: CI | On-PR-assigned_intermediate-dispatch
+
+on:
+ pull_request:
+    types: [assigned]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-16.04
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Informations
+      run: |
+          echo "github.event.pull_request: ${{ toJson(github.event.pull_request) }}"
+    - name: Intermediate dispatch
+      working-directory: ./phis2-ws
+      run: |
+        echo "curl Intermediate dispatch"
+        curl http://proxmox15.asa-showroom.com/intermediate-dispatcher.php\?sha=${{ github.event.pull_request.head.sha }}\&ref\=${{ github.event.pull_request.head.ref }}\&repo__clone_url\=${{ github.event.pull_request.head.repo.clone_url }}

@@ -45,4 +45,23 @@ public class TokenResponseStructure {
             this.expires_in = expires_in;
         }
     }
+
+    public Metadata getMetadata() {
+        return metadata;
+    }
+
+    public String getUserDisplayName() {
+        return userDisplayName;
+    }
+
+    public String getAccess_token() {
+        return access_token;
+    }
+
+    public String getExpires_in() {
+        return expires_in;
+    }
+    
+    
+    
 }
