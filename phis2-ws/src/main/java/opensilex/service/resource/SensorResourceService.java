@@ -659,6 +659,7 @@ public class SensorResourceService extends ResourceService {
     
     /**
      * Sensor Data GET service.
+     *
      * @param pageSize
      * @param page
      * @param provenanceUri
@@ -720,27 +721,28 @@ public class SensorResourceService extends ResourceService {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Response getSensorData(
-            @ApiParam(value = DocumentationAnnotation.PAGE_SIZE) @QueryParam(GlobalWebserviceValues.PAGE_SIZE) @DefaultValue(DefaultBrapiPaginationValues.PAGE_SIZE) @Min(0) int pageSize,
-            @ApiParam(value = DocumentationAnnotation.PAGE) @QueryParam(GlobalWebserviceValues.PAGE) @DefaultValue(DefaultBrapiPaginationValues.PAGE) @Min(0) int page,
-            @ApiParam(value = "Search by variable", example = DocumentationAnnotation.EXAMPLE_VARIABLE_URI) @QueryParam("variable") @Required String variablesUri,
-            @ApiParam(value = "Search by provenance", example = DocumentationAnnotation.EXAMPLE_PROVENANCE_URI) @QueryParam("provenance") String provenanceUri,
+            @PathParam("uri") @Required @URL String uri,
+            @ApiParam(value = "Search by variable", example = DocumentationAnnotation.EXAMPLE_VARIABLE_URI, required = true) @QueryParam("variable") @Required @URL String variablesUri,
+            @ApiParam(value = "Search by provenance", example = DocumentationAnnotation.EXAMPLE_PROVENANCE_URI) @QueryParam("provenance") @URL String provenanceUri,
             @ApiParam(value = "Search by minimal date", example = DocumentationAnnotation.EXAMPLE_XSDDATETIME) @QueryParam("startDate") @Date({DateFormat.YMDTHMSZ, DateFormat.YMD}) String startDate,
             @ApiParam(value = "Search by maximal date", example = DocumentationAnnotation.EXAMPLE_XSDDATETIME) @QueryParam("endDate") @Date({DateFormat.YMDTHMSZ, DateFormat.YMD}) String endDate,
-            @ApiParam(value = "Search by object uri", example = DocumentationAnnotation.EXAMPLE_SCIENTIFIC_OBJECT_URI) @QueryParam("object")  @URL String object,
-            @PathParam("uri") @Required @URL String uri
+            @ApiParam(value = "Search by object uri", example = DocumentationAnnotation.EXAMPLE_SCIENTIFIC_OBJECT_URI) @QueryParam("object") @URL String object,
+            @ApiParam(value = DocumentationAnnotation.PAGE_SIZE) @QueryParam(GlobalWebserviceValues.PAGE_SIZE) @DefaultValue(DefaultBrapiPaginationValues.PAGE_SIZE) @Min(0) int pageSize,
+            @ApiParam(value = DocumentationAnnotation.PAGE) @QueryParam(GlobalWebserviceValues.PAGE) @DefaultValue(DefaultBrapiPaginationValues.PAGE) @Min(0) int page
         ) {
         DataDAO dataDAO = new DataDAO();
         dataDAO.setPage(page);
         dataDAO.setPageSize(pageSize);
 
-        ProvenanceDAO provenanceDAO  = new ProvenanceDAO();
-        provenanceDAO.setPage(1);
+        ProvenanceDAO provenanceDAO = new ProvenanceDAO();
+        provenanceDAO.setPage(0);
         provenanceDAO.setPageSize(500);
-        
+
+        //1. Get associated sensors
         ArrayList<String> provenanceUrisAssociatedToSensor = new ArrayList<>();
-        if (provenanceUri != null){
+        if (provenanceUri != null) {
             provenanceUrisAssociatedToSensor.add(provenanceUri);
-        }else{
+        } else {
             Provenance searchProvenance = new Provenance();
             String jsonFilter = BasicDBObjectBuilder.start("metadata.prov:Agent.prov:id", uri).get().toString();
             ArrayList<Provenance> provenances = provenanceDAO.getProvenances(searchProvenance, jsonFilter);
@@ -750,19 +752,20 @@ public class SensorResourceService extends ResourceService {
             }
         }
         List<String> objectsUris = new ArrayList<>();
-        if(object != null){
-           objectsUris.add(object);
-        }
-        
-        //1. Get sensor data count
-        Integer totalCount = dataDAO.count(variablesUri, startDate, endDate, objectsUris, provenanceUrisAssociatedToSensor);
         List<Data> dataFounded = new ArrayList<>();
-        //2. Get sensor data
-        if(totalCount > 0){
-            dataFounded = dataDAO.find(page, pageSize, variablesUri,  startDate, endDate, objectsUris, provenanceUrisAssociatedToSensor);
+        Integer totalCount = 0;
+        if (!provenanceUrisAssociatedToSensor.isEmpty()) {
+            if (object != null) {
+                objectsUris.add(object);
+            }
+            //2. Get sensor data count
+            totalCount = dataDAO.count(variablesUri, startDate, endDate, objectsUris, provenanceUrisAssociatedToSensor);
+            //3. Get sensor data
+            if (totalCount > 0) {
+                dataFounded = dataDAO.find(page, pageSize, variablesUri, startDate, endDate, objectsUris, provenanceUrisAssociatedToSensor);
+            }
         }
-        
-        //3. Return result
+        //4. Return result
         ArrayList<Status> statusList = new ArrayList<>();
         ArrayList<DataDTO> sensorsToReturn = new ArrayList<>();
         ResultForm<DataDTO> getResponse;
@@ -777,7 +780,7 @@ public class SensorResourceService extends ResourceService {
             dataFounded.forEach((data) -> {
                 sensorsToReturn.add(new DataDTO(data));
             });
-            
+
             getResponse = new ResultForm<>(pageSize, page, sensorsToReturn, true, totalCount);
             getResponse.setStatus(statusList);
             return Response.status(Response.Status.OK).entity(getResponse).build();
