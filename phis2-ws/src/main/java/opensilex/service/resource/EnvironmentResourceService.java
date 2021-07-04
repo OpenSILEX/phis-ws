@@ -49,11 +49,15 @@ import opensilex.service.model.EnvironmentMeasure;
 
 /**
  * Environmental measure resource service.
- * @author Morgane Vidal <morgane.vidal@inra.fr>
+ * @author Morgane Vidal
  */
 @Api("/environments")
 @Path("/environments")
+@Deprecated
 public class EnvironmentResourceService extends ResourceService {
+    
+    private final Status deprecatedStatus = new Status(StatusCodeMsg.WARNING, StatusCodeMsg.WARNING, StatusCodeMsg.API_DEPRECATED_INFO_MESSAGE);
+    
     /**
      * Generates environmental measures from a given list of environmental measures DTOs.
      * @param environmentMeasureDTOs
@@ -105,6 +109,7 @@ public class EnvironmentResourceService extends ResourceService {
     })
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
+    @Deprecated
     public Response postEnvironmentMeasures(
         @ApiParam(value = DocumentationAnnotation.ENVIRONMENT_POST_DEFINITION) @Valid ArrayList<EnvironmentMeasurePostDTO> environmentMeasures,
         @Context HttpServletRequest context) {
@@ -116,7 +121,8 @@ public class EnvironmentResourceService extends ResourceService {
             environmentDAO.user = userSession.getUser();
             
             POSTResultsReturn result = environmentDAO.checkAndInsert(environmentMeasurePostDTOsToEnvironmentMeasure(environmentMeasures));
-            
+            result.statusList.add(deprecatedStatus);
+
             if (result.getHttpStatus().equals(Response.Status.CREATED)) {
                 postResponse = new ResponseFormPOST(result.statusList);
                 postResponse.getMetadata().setDatafiles(result.getCreatedResources());
@@ -127,7 +133,10 @@ public class EnvironmentResourceService extends ResourceService {
             }
             return Response.status(result.getHttpStatus()).entity(postResponse).build();
         } else {
-            postResponse = new ResponseFormPOST(new Status(StatusCodeMsg.REQUEST_ERROR, StatusCodeMsg.ERR, "Empty environment measure(s) to add"));
+            List statusList = new ArrayList<>();
+            statusList.add(new Status(StatusCodeMsg.REQUEST_ERROR, StatusCodeMsg.ERR, "Empty environment measure(s) to add"));
+            statusList.add(deprecatedStatus);
+            postResponse = new ResponseFormPOST(statusList);
             return Response.status(Response.Status.BAD_REQUEST).entity(postResponse).build();
         }       
     }
@@ -191,6 +200,7 @@ public class EnvironmentResourceService extends ResourceService {
                 example = GlobalWebserviceValues.AUTHENTICATION_SCHEME + " ")
     })
     @Produces(MediaType.APPLICATION_JSON)
+    @Deprecated
     public Response getEnvironmentMeasures(
         @ApiParam(value = DocumentationAnnotation.PAGE_SIZE) @QueryParam(GlobalWebserviceValues.PAGE_SIZE) @DefaultValue(DefaultBrapiPaginationValues.PAGE_SIZE) @Min(0) int pageSize,
         @ApiParam(value = DocumentationAnnotation.PAGE) @QueryParam(GlobalWebserviceValues.PAGE) @DefaultValue(DefaultBrapiPaginationValues.PAGE) @Min(0) int page,
@@ -224,7 +234,7 @@ public class EnvironmentResourceService extends ResourceService {
         ArrayList<EnvironmentMeasureDTO> list = new ArrayList<>();
         ArrayList<Status> statusList = new ArrayList<>();
         ResultForm<EnvironmentMeasureDTO> getResponse;
-        
+        statusList.add(deprecatedStatus);
         if (measures == null) {
             // Request failure
             getResponse = new ResultForm<>(0, 0, list, true, 0);
